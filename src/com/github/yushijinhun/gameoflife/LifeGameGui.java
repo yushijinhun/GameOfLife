@@ -324,7 +324,7 @@ public class LifeGameGui extends Canvas {
 					x=engine.changedXPos[i];
 					y=engine.changedYPos[i];
 					cellsBufferG.setColor(engine.get(x, y)?Color.GREEN:Color.DARK_GRAY);
-					cellsBufferG.fillRect(x*cellSize, y*cellSize, cellSize, cellSize);
+					cellsBufferG.fillRect(x, y, 1, 1);
 				}
 				engine.changedPosHead=0;
 			}
