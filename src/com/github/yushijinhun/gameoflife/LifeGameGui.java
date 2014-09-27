@@ -221,19 +221,24 @@ public class LifeGameGui extends Canvas {
 						break;
 						
 					case KeyEvent.VK_Z:
-						double nextScale=cellSize/SCALE_FACTOR;
-						if (nextScale>MAX_SCALE){
-							nextScale=MAX_SCALE;
+						double nextScale1=cellSize/SCALE_FACTOR;
+						if (nextScale1>MAX_SCALE){
+							nextScale1=MAX_SCALE;
 						}
-						cellSize=nextScale;
+						
+						setCenter(nextScale1,mouseTipX,mouseTipY);
+						cellSize=nextScale1;
 						break;
 						
 					case KeyEvent.VK_X:
-						cellSize*=SCALE_FACTOR;
+						double nextScale2=cellSize*SCALE_FACTOR;
+						setCenter(nextScale2,mouseTipX,mouseTipY);
+						cellSize=nextScale2;
 						break;
 						
 					case KeyEvent.VK_0:
 						if (e.isControlDown()){
+							setCenter(1d,mouseTipX,mouseTipY);
 							cellSize=1d;
 						}
 						break;
@@ -385,5 +390,10 @@ public class LifeGameGui extends Canvas {
 
 	public double getCellSize() {
 		return cellSize;
+	}
+	
+	public void setCenter(double scale,int x,int y){
+		xShift=(int) (mouseX-x*scale);
+		yShift=(int) (mouseY-y*scale);
 	}
 }
