@@ -18,15 +18,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import com.github.yushijinhun.nbt4j.io.TagOutputStream;
 import com.github.yushijinhun.nbt4j.tags.NbtTagCompound;
 
-public class LifeGameGui extends Canvas {
+public class LifeGameGui extends Canvas{
 	
 	public static final double SCALE_FACTOR = 0.75;
-
+	
 	public static final double MAX_SCALE=256d;
 	
 	private static final long serialVersionUID = 1L;
@@ -34,6 +38,7 @@ public class LifeGameGui extends Canvas {
 	private static final Font fontBig=new Font("Dialog",Font.BOLD,16);
 	
 	public final LifeGameEngine engine;
+	public final Lock engineLock;
 	public int fps=0;
 	public long lastTickingTime=0;
 	public boolean showInfo=true;
@@ -55,10 +60,15 @@ public class LifeGameGui extends Canvas {
 	private int mouseTipY;
 	private int mouseX;
 	private int mouseY;
+	private final ExecutorService threadPool;
+	private boolean isComputing=false;
+	private boolean isSaving=false;
 	
 	public LifeGameGui(double blockSize,LifeGameEngine theEngine) {
 		cellSize=blockSize;
 		drawFull=true;
+		engineLock=new ReentrantLock();
+		threadPool=Executors.newFixedThreadPool(4);
 		
 		if (cellSize<1){
 			cellSize=1;
@@ -70,6 +80,49 @@ public class LifeGameGui extends Canvas {
 		
 		engine=theEngine;
 		renderThread=new Thread("Render Thread"){
+			
+			class CellsRender implements Runnable{
+				
+				public boolean rendering=false;
+				
+				public void run() {
+					rendering=true;
+					if (engineLock.tryLock()){
+						try{
+							if (drawFull){
+								cellsBufferG.setColor(Color.DARK_GRAY);
+								cellsBufferG.fillRect(0, 0, cellsBuffer.getWidth(), cellsBuffer.getHeight());
+								cellsBufferG.setColor(Color.GREEN);
+								for (int x=0;x<engine.width;x++){
+									for (int y=0;y<engine.height;y++){
+										if (engine.get(x, y)){
+											cellsBufferG.fillRect(x, y, 1, 1);
+										}
+									}
+								}
+								
+								drawFull=false;
+							}else{
+								int x;
+								int y;
+								for (int i=0;i<engine.changedPosHead;i++){
+									x=engine.changedXPos[i];
+									y=engine.changedYPos[i];
+									cellsBufferG.setColor(engine.get(x, y)?Color.GREEN:Color.DARK_GRAY);
+									cellsBufferG.fillRect(x, y, 1, 1);
+								}
+								engine.changedPosHead=0;
+							}
+						}finally{
+							engineLock.unlock();
+						}
+					}
+					rendering=false;
+				}
+			};
+			
+			private final ExecutorService renderThreadPool=Executors.newCachedThreadPool();
+			private final CellsRender cellsRender=new CellsRender();
 			
 			public void run(){
 				while(buffer==null){
@@ -107,6 +160,10 @@ public class LifeGameGui extends Canvas {
 					}
 					
 					lastRenderTimeBegin=System.currentTimeMillis();
+					if (!cellsRender.rendering){
+						renderThreadPool.execute(cellsRender);
+					}
+					
 					synchronized (buffer) {
 						g2d.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
 						render(g2d);
@@ -121,10 +178,12 @@ public class LifeGameGui extends Canvas {
 						try {
 							Thread.sleep(sleepTime);
 						} catch (InterruptedException e) {
+							renderThreadPool.shutdown();
 							return;
 						}
 					}
 				}
+				renderThreadPool.shutdown();
 			}
 			
 		};
@@ -134,19 +193,28 @@ public class LifeGameGui extends Canvas {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				fistOpen=false;
-
+				
 				switch(e.getButton()){
 					case MouseEvent.BUTTON1:
-						int x=(int) (Math.rint(e.getX()-xShift)/cellSize);
-						int y=(int) (Math.rint(e.getY()-yShift)/cellSize);
+						final int x=(int) (Math.rint(e.getX()-xShift)/cellSize);
+						final int y=(int) (Math.rint(e.getY()-yShift)/cellSize);
 						
 						if (x>=engine.width||y>=engine.height||x<0||y<0){
 							return;
 						}
 						
-						synchronized (engine) {
-							engine.set(x, y, !engine.get(x, y));
-						}
+						threadPool.execute(new Runnable() {
+							
+							public void run() {
+								engineLock.lock();
+								try{
+									engine.set(x, y, !engine.get(x, y));
+								}finally{
+									engineLock.unlock();
+								}
+							}
+						});
+						
 						break;
 						
 					case MouseEvent.BUTTON3:
@@ -205,17 +273,32 @@ public class LifeGameGui extends Canvas {
 				
 				switch(e.getKeyCode()){
 					case KeyEvent.VK_N:
-						if ((lastPressedTime+10)>System.currentTimeMillis()){
-							return;
+						if (isComputing||(lastPressedTime+10)>System.currentTimeMillis()){
+							break;
 						}
-						long start=System.currentTimeMillis();
-						synchronized (engine) {
-							engine.nextFrame();
-						}
-						lastTickingTime=System.currentTimeMillis()-start;
-						lastPressedTime=System.currentTimeMillis();
+						
+						threadPool.execute(new Runnable() {
+								
+							@Override
+							public void run() {
+								isComputing=true;
+								long start=System.currentTimeMillis();
+								
+								engineLock.lock();
+								try{
+									engine.nextFrame();
+								}finally{
+									engineLock.unlock();
+								}
+								
+								lastTickingTime=System.currentTimeMillis()-start;
+								lastPressedTime=System.currentTimeMillis();
+								isComputing=false;
+							}
+						});
+					
 						break;
-				
+						
 					case KeyEvent.VK_F1:
 						showInfo=!showInfo;
 						break;
@@ -244,42 +327,37 @@ public class LifeGameGui extends Canvas {
 						break;
 						
 					case KeyEvent.VK_S:
-						if (e.isControlDown()){
-							JFileChooser chooser = new JFileChooser();
-							chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-							chooser.setDialogTitle("Save");
-							chooser.showSaveDialog(LifeGameGui.this);
-							
-							File file = chooser.getSelectedFile();
-							if (file == null) {
-								JOptionPane.showMessageDialog(LifeGameGui.this, "You did not select any files.", "Game of Life", JOptionPane.WARNING_MESSAGE);
-								return;
-							}
-							
-							NbtTagCompound comp=new NbtTagCompound("root");
-							synchronized (engine) {
-								engine.writeToNBT(comp);
-							}
-							
-							TagOutputStream out=null;
-							try{
-								out=new TagOutputStream(new FileOutputStream(file));
-								out.writeTag(comp, true);
-							}catch(IOException e1){
-								StringBuilder sb=new StringBuilder("When saving game, an IOException occurred.\n\n");
+						if (e.isControlDown()&&!isSaving){
+							threadPool.execute(new Runnable() {
 								
-								CharArrayWriter writer=new CharArrayWriter();
-								e1.printStackTrace(new PrintWriter(writer));
-								sb.append(writer.toCharArray());
-								writer.close();
-								
-								JOptionPane.showMessageDialog(LifeGameGui.this, sb.toString().replaceAll("\t", "    "), "Game of Life", JOptionPane.ERROR_MESSAGE);
-								return;
-							}finally{
-								if (out!=null){
-									try {
-										out.close();
-									} catch (IOException e1) {
+								@Override
+								public void run() {
+									JFileChooser chooser = new JFileChooser();
+									chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+									chooser.setDialogTitle("Save");
+									chooser.showSaveDialog(LifeGameGui.this);
+									
+									File file = chooser.getSelectedFile();
+									if (file == null) {
+										JOptionPane.showMessageDialog(LifeGameGui.this, "You did not select any files.", "Game of Life", JOptionPane.WARNING_MESSAGE);
+										return;
+									}
+									
+									NbtTagCompound comp=new NbtTagCompound("root");
+									
+									engineLock.lock();
+									try{
+										engine.writeToNBT(comp);
+									}finally{
+										engineLock.unlock();
+									}
+									
+									
+									TagOutputStream out=null;
+									try{
+										out=new TagOutputStream(new FileOutputStream(file));
+										out.writeTag(comp, true);
+									}catch(IOException e1){
 										StringBuilder sb=new StringBuilder("When saving game, an IOException occurred.\n\n");
 										
 										CharArrayWriter writer=new CharArrayWriter();
@@ -289,12 +367,27 @@ public class LifeGameGui extends Canvas {
 										
 										JOptionPane.showMessageDialog(LifeGameGui.this, sb.toString().replaceAll("\t", "    "), "Game of Life", JOptionPane.ERROR_MESSAGE);
 										return;
+									}finally{
+										if (out!=null){
+											try {
+												out.close();
+											} catch (IOException e1) {
+												StringBuilder sb=new StringBuilder("When saving game, an IOException occurred.\n\n");
+												
+												CharArrayWriter writer=new CharArrayWriter();
+												e1.printStackTrace(new PrintWriter(writer));
+												sb.append(writer.toCharArray());
+												writer.close();
+												
+												JOptionPane.showMessageDialog(LifeGameGui.this, sb.toString().replaceAll("\t", "    "), "Game of Life", JOptionPane.ERROR_MESSAGE);
+												return;
+											}
+										}
 									}
+									
+									JOptionPane.showMessageDialog(LifeGameGui.this, "The game saved to "+file.getPath(), "Game of Life", JOptionPane.INFORMATION_MESSAGE);
 								}
-							}
-							
-							JOptionPane.showMessageDialog(LifeGameGui.this, "The game saved to "+file.getPath(), "Game of Life", JOptionPane.INFORMATION_MESSAGE);
-							
+							});
 						}
 						break;
 				}
@@ -320,51 +413,25 @@ public class LifeGameGui extends Canvas {
 	}
 	
 	private void render(Graphics2D g2d){
-		synchronized (engine) {
-			if (drawFull){
-				cellsBufferG.setColor(Color.DARK_GRAY);
-				cellsBufferG.fillRect(0, 0, cellsBuffer.getWidth(), cellsBuffer.getHeight());
-				cellsBufferG.setColor(Color.GREEN);
-				for (int x=0;x<engine.width;x++){
-					for (int y=0;y<engine.height;y++){
-						if (engine.get(x, y)){
-							cellsBufferG.fillRect(x, y, 1, 1);
-						}
-					}
-				}
-				
-				drawFull=false;
-			}else{
-				int x;
-				int y;
-				for (int i=0;i<engine.changedPosHead;i++){
-					x=engine.changedXPos[i];
-					y=engine.changedYPos[i];
-					cellsBufferG.setColor(engine.get(x, y)?Color.GREEN:Color.DARK_GRAY);
-					cellsBufferG.fillRect(x, y, 1, 1);
-				}
-				engine.changedPosHead=0;
-			}
-			
-			g2d.drawImage(cellsBuffer, xShift, yShift,(int) (Math.rint(cellsBuffer.getWidth()*cellSize)),(int) (Math.rint(cellsBuffer.getHeight())*cellSize), null);
-			
-			if (showInfo){
-				g2d.setFont(font);
-				renderString(g2d,"cell size: "+cellSize, 0, 40);
-				renderString(g2d,"last ticking time: "+lastTickingTime, 0, 30);
-				renderString(g2d,"ticks: "+engine.getTicks(), 0, 20);
-				renderString(g2d,"fps: "+fps, 0, 10);
-				renderString(g2d, "("+mouseTipX+", "+mouseTipY+")", mouseX+10, mouseY+10);
-			}
-			
-			if (fistOpen){
-				g2d.setFont(fontBig);
-				renderString(g2d,"Game of Life", 80, 90);
-				renderString(g2d,"by yushijinhun", 80, 105);
-				renderString(g2d,"Press N to show next frame", 80, 120);
-				renderString(g2d,"Click to change one cell's status", 80, 135);
-			}
+		g2d.drawImage(cellsBuffer, xShift, yShift,(int) (Math.rint(cellsBuffer.getWidth()*cellSize)),(int) (Math.rint(cellsBuffer.getHeight())*cellSize), null);
+		
+		if (showInfo){
+			g2d.setFont(font);
+			renderString(g2d,"cell size: "+cellSize, 0, 40);
+			renderString(g2d,"last ticking time: "+(isComputing?"computing...":lastTickingTime), 0, 30);
+			renderString(g2d,"ticks: "+engine.getTicks(), 0, 20);
+			renderString(g2d,"fps: "+fps, 0, 10);
+			renderString(g2d, "("+mouseTipX+", "+mouseTipY+")", mouseX+10, mouseY+10);
 		}
+		
+		if (fistOpen){
+			g2d.setFont(fontBig);
+			renderString(g2d,"Game of Life", 80, 90);
+			renderString(g2d,"by yushijinhun", 80, 105);
+			renderString(g2d,"Press N to show next frame", 80, 120);
+			renderString(g2d,"Click to change one cell's status", 80, 135);
+		}
+		
 	}
 	
 	private void renderString(Graphics g,String str,int x,int y){
@@ -380,14 +447,9 @@ public class LifeGameGui extends Canvas {
 	
 	public void shutdown(){
 		stopped=true;
-		
-		try {
-			renderThread.join();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		}
+		threadPool.shutdown();
 	}
-
+	
 	public double getCellSize() {
 		return cellSize;
 	}
