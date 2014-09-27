@@ -27,6 +27,8 @@ public final class Main {
 				
 				if (window!=null){
 					window.gui.shutdown();
+					window=null;
+					System.gc();
 				}
 				
 				StringBuilder sb=new StringBuilder();
