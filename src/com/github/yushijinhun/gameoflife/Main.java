@@ -14,7 +14,7 @@ public final class Main {
 	private static int width=160;
 	private static int height=120;
 	private static boolean random;
-	private static int blockSize=4;
+	private static double blockSize=4;
 	private static LifeGameWindow window;
 	private static boolean read=false;
 	private static String filePath=null;
@@ -105,7 +105,7 @@ public final class Main {
 					break;
 					
 				case "-blockSize":
-					blockSize=Integer.parseInt(args[i+1]);
+					blockSize=Double.parseDouble(args[i+1]);
 					i+=1;
 					break;
 					

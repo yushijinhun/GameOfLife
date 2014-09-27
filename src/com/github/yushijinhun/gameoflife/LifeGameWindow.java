@@ -10,7 +10,7 @@ public class LifeGameWindow extends Frame {
 	
 	public LifeGameGui gui;
 	
-	public LifeGameWindow(int blockSize,LifeGameEngine engine) {
+	public LifeGameWindow(double blockSize,LifeGameEngine engine) {
 		gui=new LifeGameGui(blockSize,engine);
 		add(gui);
 		
@@ -34,7 +34,7 @@ public class LifeGameWindow extends Frame {
 		
 		setTitle("Game of Life");
 		pack();
-		setSize(gui.getX()+gui.engine.width*gui.getCellSize()+8,gui.getY()+gui.engine.height*gui.getCellSize()+8);
+		setSize((int) (Math.rint(gui.getX()+gui.engine.width*gui.getCellSize()+8)),(int) (Math.rint(gui.getY()+gui.engine.height*gui.getCellSize()+8)));
 		setVisible(true);
 	}
 }

@@ -25,6 +25,10 @@ import com.github.yushijinhun.nbt4j.tags.NbtTagCompound;
 
 public class LifeGameGui extends Canvas {
 	
+	public static final double SCALE_FACTOR = 0.75;
+
+	public static final double MAX_SCALE=256d;
+	
 	private static final long serialVersionUID = 1L;
 	private static final Font font=new Font("Dialog",Font.BOLD,12);
 	private static final Font fontBig=new Font("Dialog",Font.BOLD,16);
@@ -35,7 +39,7 @@ public class LifeGameGui extends Canvas {
 	public boolean showInfo=true;
 	public boolean drawFull;
 	
-	private int cellSize=8;
+	private double cellSize=8;
 	private BufferedImage buffer;
 	private BufferedImage cellsBuffer;
 	private Graphics2D cellsBufferG;
@@ -52,7 +56,7 @@ public class LifeGameGui extends Canvas {
 	private int mouseX;
 	private int mouseY;
 	
-	public LifeGameGui(int blockSize,LifeGameEngine theEngine) {
+	public LifeGameGui(double blockSize,LifeGameEngine theEngine) {
 		cellSize=blockSize;
 		drawFull=true;
 		
@@ -133,8 +137,8 @@ public class LifeGameGui extends Canvas {
 
 				switch(e.getButton()){
 					case MouseEvent.BUTTON1:
-						int x=(e.getX()-xShift)/cellSize;
-						int y=(e.getY()-yShift)/cellSize;
+						int x=(int) (Math.rint(e.getX()-xShift)/cellSize);
+						int y=(int) (Math.rint(e.getY()-yShift)/cellSize);
 						
 						if (x>=engine.width||y>=engine.height||x<0||y<0){
 							return;
@@ -186,8 +190,8 @@ public class LifeGameGui extends Canvas {
 			private void updataMousePos(MouseEvent e){
 				mouseX=e.getX();
 				mouseY=e.getY();
-				mouseTipX=(mouseX-xShift)/cellSize;
-				mouseTipY=(mouseY-yShift)/cellSize;
+				mouseTipX=(int) (Math.rint(mouseX-xShift)/cellSize);
+				mouseTipY=(int) (Math.rint(mouseY-yShift)/cellSize);
 			}
 		});
 		
@@ -217,13 +221,15 @@ public class LifeGameGui extends Canvas {
 						break;
 						
 					case KeyEvent.VK_Z:
-						if (cellSize>1){
-							cellSize--;
+						double nextScale=cellSize/SCALE_FACTOR;
+						if (nextScale>MAX_SCALE){
+							nextScale=MAX_SCALE;
 						}
+						cellSize=nextScale;
 						break;
 						
 					case KeyEvent.VK_X:
-						cellSize++;
+						cellSize*=SCALE_FACTOR;
 						break;
 						
 					case KeyEvent.VK_S:
@@ -284,7 +290,7 @@ public class LifeGameGui extends Canvas {
 			}
 		});
 		
-		setSize(engine.width*cellSize, engine.height*cellSize);
+		setSize((int) (Math.rint(engine.width*cellSize)), (int) (Math.rint(engine.height*cellSize)));
 		renderThread.start();
 	}
 	
@@ -329,7 +335,7 @@ public class LifeGameGui extends Canvas {
 				engine.changedPosHead=0;
 			}
 			
-			g2d.drawImage(cellsBuffer, xShift, yShift,cellsBuffer.getWidth()*cellSize,cellsBuffer.getHeight()*cellSize, null);
+			g2d.drawImage(cellsBuffer, xShift, yShift,(int) (Math.rint(cellsBuffer.getWidth()*cellSize)),(int) (Math.rint(cellsBuffer.getHeight())*cellSize), null);
 			
 			if (showInfo){
 				g2d.setFont(font);
@@ -371,7 +377,7 @@ public class LifeGameGui extends Canvas {
 		}
 	}
 
-	public int getCellSize() {
+	public double getCellSize() {
 		return cellSize;
 	}
 }
