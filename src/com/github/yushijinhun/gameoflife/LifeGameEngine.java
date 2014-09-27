@@ -1,5 +1,6 @@
 package com.github.yushijinhun.gameoflife;
 
+import com.github.yushijinhun.nbt4j.tags.NbtTagBooleanArray;
 import com.github.yushijinhun.nbt4j.tags.NbtTagCompound;
 
 public class LifeGameEngine {
@@ -8,9 +9,7 @@ public class LifeGameEngine {
 		LifeGameEngine game=new LifeGameEngine(comp.getInt("width"), comp.getInt("height"));
 		game.ticks=comp.getLong("ticks");
 		for (int x=0;x<game.width;x++){
-			for (int y=0;y<game.height;y++){
-				game.lifes[x][y]=comp.getBoolean("lifes-"+x+","+y);
-			}
+			game.lifes[x]=((NbtTagBooleanArray)comp.get("xline-"+x)).value;
 		}
 		return game;
 	}
@@ -125,9 +124,7 @@ public class LifeGameEngine {
 		comp.setInt("height", height);
 		comp.setLong("ticks", ticks);
 		for (int x=0;x<width;x++){
-			for (int y=0;y<height;y++){
-				comp.setBoolaen("lifes-"+x+","+y, lifes[x][y]);
-			}
+			comp.add(new NbtTagBooleanArray("xline-"+x, lifes[x]));
 		}
 	}
 }
