@@ -2,10 +2,12 @@ package com.github.yushijinhun.gameoflife;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -71,7 +73,8 @@ public class LifeGameGui extends Canvas {
 			public void run(){
 				while(buffer==null){
 					if (getGraphicsConfiguration()!=null){
-						buffer=getGraphicsConfiguration().createCompatibleImage(engine.width*cellSize, engine.height*cellSize);
+						Dimension d=Toolkit.getDefaultToolkit().getScreenSize();
+						buffer=getGraphicsConfiguration().createCompatibleImage((int)d.getWidth(), (int)d.getHeight());
 						cellsBuffer=getGraphicsConfiguration().createCompatibleImage(engine.width*cellSize, engine.height*cellSize);
 						cellsBufferG=cellsBuffer.createGraphics();
 						break;
@@ -311,11 +314,14 @@ public class LifeGameGui extends Canvas {
 	private void render(Graphics2D g2d){
 		synchronized (engine) {
 			if (drawFull){
-				cellsBufferG.clearRect(0, 0, cellsBuffer.getWidth(), cellsBuffer.getHeight());
+				cellsBufferG.setColor(Color.DARK_GRAY);
+				cellsBufferG.fillRect(0, 0, cellsBuffer.getWidth(), cellsBuffer.getHeight());
+				cellsBufferG.setColor(Color.GREEN);
 				for (int x=0;x<engine.width;x++){
 					for (int y=0;y<engine.height;y++){
-						cellsBufferG.setColor(engine.get(x, y)?Color.GREEN:Color.DARK_GRAY);
-						cellsBufferG.fillRect(x*cellSize, y*cellSize, cellSize, cellSize);
+						if (engine.get(x, y)){
+							cellsBufferG.fillRect(x*cellSize, y*cellSize, cellSize, cellSize);
+						}
 					}
 				}
 				
