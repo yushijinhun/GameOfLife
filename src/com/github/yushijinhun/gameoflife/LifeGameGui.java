@@ -232,6 +232,12 @@ public class LifeGameGui extends Canvas {
 						cellSize*=SCALE_FACTOR;
 						break;
 						
+					case KeyEvent.VK_0:
+						if (e.isControlDown()){
+							cellSize=1d;
+						}
+						break;
+						
 					case KeyEvent.VK_S:
 						if (e.isControlDown()){
 							JFileChooser chooser = new JFileChooser();
