@@ -29,7 +29,6 @@ public class LifeGameGui extends Canvas {
 	private static final Font font=new Font("Dialog",Font.BOLD,12);
 	private static final Font fontBig=new Font("Dialog",Font.BOLD,16);
 	
-	public final int maxCellSize;
 	public final LifeGameEngine engine;
 	public int fps=0;
 	public long lastTickingTime=0;
@@ -65,8 +64,6 @@ public class LifeGameGui extends Canvas {
 			cellSize=16;
 		}
 		
-		maxCellSize=cellSize;
-		
 		engine=theEngine;
 		renderThread=new Thread("Render Thread"){
 			
@@ -75,7 +72,7 @@ public class LifeGameGui extends Canvas {
 					if (getGraphicsConfiguration()!=null){
 						Dimension d=Toolkit.getDefaultToolkit().getScreenSize();
 						buffer=getGraphicsConfiguration().createCompatibleImage((int)d.getWidth(), (int)d.getHeight());
-						cellsBuffer=getGraphicsConfiguration().createCompatibleImage(engine.width*cellSize, engine.height*cellSize);
+						cellsBuffer=getGraphicsConfiguration().createCompatibleImage(engine.width, engine.height);
 						cellsBufferG=cellsBuffer.createGraphics();
 						break;
 					}
@@ -88,11 +85,9 @@ public class LifeGameGui extends Canvas {
 				}
 				
 				Graphics2D g2d=buffer.createGraphics();
-				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 				g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 				g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-				g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 				
 				int fps=0;
 				long nextSecond=System.currentTimeMillis();
@@ -224,15 +219,11 @@ public class LifeGameGui extends Canvas {
 					case KeyEvent.VK_Z:
 						if (cellSize>1){
 							cellSize--;
-							drawFull=true;
 						}
 						break;
 						
 					case KeyEvent.VK_X:
-						if (cellSize<maxCellSize){
-							cellSize++;
-							drawFull=true;
-						}
+						cellSize++;
 						break;
 						
 					case KeyEvent.VK_S:
@@ -320,7 +311,7 @@ public class LifeGameGui extends Canvas {
 				for (int x=0;x<engine.width;x++){
 					for (int y=0;y<engine.height;y++){
 						if (engine.get(x, y)){
-							cellsBufferG.fillRect(x*cellSize, y*cellSize, cellSize, cellSize);
+							cellsBufferG.fillRect(x, y, 1, 1);
 						}
 					}
 				}
@@ -338,7 +329,7 @@ public class LifeGameGui extends Canvas {
 				engine.changedPosHead=0;
 			}
 			
-			g2d.drawImage(cellsBuffer, xShift, yShift, null);
+			g2d.drawImage(cellsBuffer, xShift, yShift,cellsBuffer.getWidth()*cellSize,cellsBuffer.getHeight()*cellSize, null);
 			
 			if (showInfo){
 				g2d.setFont(font);
