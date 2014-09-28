@@ -68,7 +68,7 @@ public class LifeGameGui extends Canvas{
 		cellSize=blockSize;
 		drawFull=true;
 		engineLock=new ReentrantLock();
-		threadPool=Executors.newFixedThreadPool(4);
+		threadPool=Executors.newSingleThreadExecutor();
 		
 		if (cellSize<1){
 			cellSize=1;
@@ -121,7 +121,7 @@ public class LifeGameGui extends Canvas{
 				}
 			};
 			
-			private final ExecutorService renderThreadPool=Executors.newCachedThreadPool();
+			private final ExecutorService renderThreadPool=Executors.newSingleThreadExecutor();
 			private final CellsRender cellsRender=new CellsRender();
 			
 			public void run(){
@@ -278,7 +278,7 @@ public class LifeGameGui extends Canvas{
 						}
 						
 						threadPool.execute(new Runnable() {
-								
+							
 							@Override
 							public void run() {
 								isComputing=true;
@@ -296,7 +296,7 @@ public class LifeGameGui extends Canvas{
 								isComputing=false;
 							}
 						});
-					
+						
 						break;
 						
 					case KeyEvent.VK_F1:
@@ -328,21 +328,22 @@ public class LifeGameGui extends Canvas{
 						
 					case KeyEvent.VK_S:
 						if (e.isControlDown()&&!isSaving){
+							
+							JFileChooser chooser = new JFileChooser();
+							chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+							chooser.setDialogTitle("Save");
+							chooser.showSaveDialog(LifeGameGui.this);
+							
+							final File file = chooser.getSelectedFile();
+							if (file == null) {
+								JOptionPane.showMessageDialog(LifeGameGui.this, "You did not select any files.", "Game of Life", JOptionPane.WARNING_MESSAGE);
+								return;
+							}
+							
 							threadPool.execute(new Runnable() {
 								
 								@Override
 								public void run() {
-									JFileChooser chooser = new JFileChooser();
-									chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-									chooser.setDialogTitle("Save");
-									chooser.showSaveDialog(LifeGameGui.this);
-									
-									File file = chooser.getSelectedFile();
-									if (file == null) {
-										JOptionPane.showMessageDialog(LifeGameGui.this, "You did not select any files.", "Game of Life", JOptionPane.WARNING_MESSAGE);
-										return;
-									}
-									
 									NbtTagCompound comp=new NbtTagCompound("root");
 									
 									engineLock.lock();
