@@ -449,6 +449,7 @@ public class LifeGameGui extends Canvas{
 	public void shutdown(){
 		stopped=true;
 		threadPool.shutdown();
+		engine.shutdown();
 	}
 	
 	public double getCellSize() {

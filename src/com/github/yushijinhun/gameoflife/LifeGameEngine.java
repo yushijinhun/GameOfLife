@@ -1,9 +1,13 @@
 package com.github.yushijinhun.gameoflife;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import com.github.yushijinhun.nbt4j.tags.NbtTagBooleanArray;
 import com.github.yushijinhun.nbt4j.tags.NbtTagCompound;
 
 public class LifeGameEngine {
+	
+	private static final int THREADS=Runtime.getRuntime().availableProcessors();
 	
 	public static LifeGameEngine readFromNBT(NbtTagCompound comp){
 		LifeGameEngine game=new LifeGameEngine(comp.getInt("width"), comp.getInt("height"));
@@ -12,6 +16,39 @@ public class LifeGameEngine {
 			game.lifes[x]=((NbtTagBooleanArray)comp.get("xline-"+x)).value;
 		}
 		return game;
+	}
+	
+	private class ComputingUnit implements Runnable{
+		
+		private final int xstart;
+		private final int xend;
+		
+		public boolean finish=false;
+		
+		public ComputingUnit(int xstart,int xend){
+			this.xstart=xstart;
+			this.xend=xend;
+		}
+		
+		@Override
+		public void run() {
+			for (int i=xstart;i<xend;i++){
+				System.arraycopy(lifes[i], 0, bufferLifes[i], 0, height);
+				for (int l=0;l<height;l++){
+					int nearby=getAroundLifes(i,l);
+					
+					if ((nearby<2||nearby>3)&&lifes[i][l]){
+						bufferLifes[i][l]=false;
+						changed(i, l);
+					}else if(nearby==3&&!lifes[i][l]){
+						bufferLifes[i][l]=true;
+						changed(i,l);
+					}
+				}
+			}
+			finish=true;
+		}
+		
 	}
 	
 	public final int width;
@@ -24,6 +61,8 @@ public class LifeGameEngine {
 	private long ticks=0;
 	private boolean[][] lifes;
 	private boolean[][] bufferLifes;
+	private ExecutorService threadPool=Executors.newFixedThreadPool(THREADS);
+	private ComputingUnit[] computingUnits;
 	
 	public LifeGameEngine(int width,int height) {
 		this.width=width;
@@ -45,6 +84,16 @@ public class LifeGameEngine {
 		for (int i=0;i<width;i++){
 			bufferLifes[i]=new boolean[height];
 		}
+		
+		computingUnits=new ComputingUnit[THREADS];
+		int rowsEveryUnit=width/THREADS;
+		for (int i=0;i<THREADS;i++){
+			if (i==THREADS-1){
+				computingUnits[i]=new ComputingUnit(i*rowsEveryUnit, width);
+			}else{
+				computingUnits[i]=new ComputingUnit(i*rowsEveryUnit, rowsEveryUnit*(i+1));
+			}
+		}
 	}
 	
 	public boolean get(int x,int y){
@@ -56,7 +105,7 @@ public class LifeGameEngine {
 		changed(x,y);
 	}
 	
-	public void changed(int x,int y){
+	public synchronized void changed(int x,int y){
 		if (changedPosHead>=changedXPos.length){
 			int[] changedXPos_=new int[(int) (changedXPos.length*1.5)];
 			int[] changedYPos_=new int[(int) (changedYPos.length*1.5)];
@@ -72,18 +121,14 @@ public class LifeGameEngine {
 	}
 	
 	public void nextFrame(){
-		for (int i=0;i<width;i++){
-			System.arraycopy(lifes[i], 0, bufferLifes[i], 0, height);
-			for (int l=0;l<height;l++){
-				int nearby=getAroundLifes(i,l);
-				
-				if ((nearby<2||nearby>3)&&lifes[i][l]){
-					bufferLifes[i][l]=false;
-					changed(i, l);
-				}else if(nearby==3&&!lifes[i][l]){
-					bufferLifes[i][l]=true;
-					changed(i,l);
-				}
+		for (int i=0;i<THREADS;i++){
+			computingUnits[i].finish=false;
+			threadPool.execute(computingUnits[i]);
+		}
+		
+		for (int i=0;i<THREADS;i++){
+			while(!computingUnits[i].finish){
+				Thread.yield();
 			}
 		}
 		
@@ -126,5 +171,9 @@ public class LifeGameEngine {
 		for (int x=0;x<width;x++){
 			comp.add(new NbtTagBooleanArray("xline-"+x, lifes[x]));
 		}
+	}
+	
+	public void shutdown(){
+		threadPool.shutdown();
 	}
 }
