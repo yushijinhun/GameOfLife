@@ -163,7 +163,7 @@ public class LifeGameEngine {
 			return false;
 		}
 		
-		return lifes[x%width][y%height];
+		return lifes[x][y];
 	}
 	
 	public long getTicks() {
