@@ -89,7 +89,7 @@ public final class Main {
 				}
 			}
 		}else{
-			return new LifeGameEngine(width, height);
+			return new LifeGameEngine(new LifeGameEngineConfiguration(width, height));
 		}
 	}
 	

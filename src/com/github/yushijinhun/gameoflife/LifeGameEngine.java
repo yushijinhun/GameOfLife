@@ -7,15 +7,17 @@ import com.github.yushijinhun.nbt4j.tags.NbtTagCompound;
 
 public class LifeGameEngine {
 	
-	private static final int THREADS=Runtime.getRuntime().availableProcessors();
-	
-	public static LifeGameEngine readFromNBT(NbtTagCompound comp){
-		LifeGameEngine game=new LifeGameEngine(comp.getInt("width"), comp.getInt("height"));
+	public static LifeGameEngine readFromNBT(NbtTagCompound comp,int threads){
+		LifeGameEngine game=new LifeGameEngine(new LifeGameEngineConfiguration(comp.getInt("width"), comp.getInt("height"),threads));
 		game.ticks=comp.getLong("ticks");
 		for (int x=0;x<game.width;x++){
 			game.lifes[x]=((NbtTagBooleanArray)comp.get("xline-"+x)).value;
 		}
 		return game;
+	}
+	
+	public static LifeGameEngine readFromNBT(NbtTagCompound comp){
+		return readFromNBT(comp,LifeGameEngineConfiguration.DEFAULT_THREADS);
 	}
 	
 	private class ComputingUnit implements Runnable{
@@ -57,20 +59,23 @@ public class LifeGameEngine {
 	public int[] changedYPos;
 	public int changedPosHead;
 	
+	private final int threads;
 	private int cells;
 	private long ticks=0;
 	private boolean[][] lifes;
 	private boolean[][] bufferLifes;
-	private ExecutorService threadPool=Executors.newFixedThreadPool(THREADS);
+	private ExecutorService threadPool;
 	private ComputingUnit[] computingUnits;
 	
-	public LifeGameEngine(int width,int height) {
-		this.width=width;
-		this.height=height;
+	public LifeGameEngine(LifeGameEngineConfiguration config) {
+		this.width=config.width;
+		this.height=config.height;
 		cells=width*height;
 		changedXPos=new int[cells];
 		changedYPos=new int[cells];
 		changedPosHead=0;
+		threads=config.threads;
+		threadPool=Executors.newFixedThreadPool(threads);
 		
 		lifes=new boolean[width][];
 		for (int i=0;i<width;i++){
@@ -85,10 +90,10 @@ public class LifeGameEngine {
 			bufferLifes[i]=new boolean[height];
 		}
 		
-		computingUnits=new ComputingUnit[THREADS];
-		int rowsEveryUnit=width/THREADS;
-		for (int i=0;i<THREADS;i++){
-			if (i==THREADS-1){
+		computingUnits=new ComputingUnit[threads];
+		int rowsEveryUnit=width/threads;
+		for (int i=0;i<threads;i++){
+			if (i==threads-1){
 				computingUnits[i]=new ComputingUnit(i*rowsEveryUnit, width);
 			}else{
 				computingUnits[i]=new ComputingUnit(i*rowsEveryUnit, rowsEveryUnit*(i+1));
@@ -121,12 +126,12 @@ public class LifeGameEngine {
 	}
 	
 	public void nextFrame(){
-		for (int i=0;i<THREADS;i++){
+		for (int i=0;i<threads;i++){
 			computingUnits[i].finish=false;
 			threadPool.execute(computingUnits[i]);
 		}
 		
-		for (int i=0;i<THREADS;i++){
+		for (int i=0;i<threads;i++){
 			while(!computingUnits[i].finish){
 				Thread.yield();
 			}
