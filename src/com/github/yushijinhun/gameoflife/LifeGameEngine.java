@@ -34,6 +34,7 @@ public class LifeGameEngine {
 		
 		@Override
 		public void run() {
+			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 			for (int i=xstart;i<xend;i++){
 				System.arraycopy(lifes[i], 0, bufferLifes[i], 0, height);
 				for (int l=0;l<height;l++){
