@@ -103,21 +103,25 @@ public class LifeGameGui extends Canvas{
 								
 								drawFull=false;
 							}else{
-								int x;
-								int y;
-								for (int i=0;i<engine.changedPosHead;i++){
-									x=engine.changedXPos[i];
-									y=engine.changedYPos[i];
-									cellsBufferG.setColor(engine.get(x, y)?Color.GREEN:Color.DARK_GRAY);
-									cellsBufferG.fillRect(x, y, 1, 1);
-								}
-								engine.changedPosHead=0;
+								cellsBufferG.setColor(Color.GREEN);
+								renderChangedCellsQueue(engine.trueQueue);
+								cellsBufferG.setColor(Color.DARK_GRAY);
+								renderChangedCellsQueue(engine.falseQueue);
 							}
 						}finally{
 							engineLock.unlock();
 						}
 					}
 					rendering=false;
+				}
+				
+				private void renderChangedCellsQueue(LifeGameChangedCellsQueue q){
+					synchronized (q) {
+						for (int i=0;i<q.size();i++){
+							cellsBufferG.fillRect(q.getXAtIndex(i), q.getYAtIndex(i), 1, 1);
+						}
+						q.clear();
+					}
 				}
 			};
 			

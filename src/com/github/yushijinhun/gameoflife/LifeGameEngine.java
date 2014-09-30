@@ -42,10 +42,10 @@ public class LifeGameEngine {
 					
 					if ((nearby<2||nearby>3)&&lifes[i][l]){
 						bufferLifes[i][l]=false;
-						changed(i, l);
+						changed(i, l,false);
 					}else if(nearby==3&&!lifes[i][l]){
 						bufferLifes[i][l]=true;
-						changed(i,l);
+						changed(i,l,true);
 					}
 				}
 			}
@@ -56,9 +56,9 @@ public class LifeGameEngine {
 	
 	public final int width;
 	public final int height;
-	public int[] changedXPos;
-	public int[] changedYPos;
 	public int changedPosHead;
+	public final LifeGameChangedCellsQueue trueQueue;
+	public final LifeGameChangedCellsQueue falseQueue;
 	
 	private final int threads;
 	private int cells;
@@ -72,17 +72,17 @@ public class LifeGameEngine {
 		this.width=config.width;
 		this.height=config.height;
 		cells=width*height;
-		changedXPos=new int[cells];
-		changedYPos=new int[cells];
 		changedPosHead=0;
 		threads=config.threads;
 		threadPool=Executors.newFixedThreadPool(threads);
+		trueQueue=new LifeGameChangedCellsQueue(cells);
+		falseQueue=new LifeGameChangedCellsQueue(cells);
 		
 		lifes=new boolean[width][];
 		for (int i=0;i<width;i++){
 			lifes[i]=new boolean[height];
 			for (int l=0;l<height;l++){
-				set(i, l, false);
+				lifes[i][l]=false;
 			}
 		}
 		
@@ -108,22 +108,11 @@ public class LifeGameEngine {
 	
 	public void set(int x,int y,boolean value){
 		lifes[x][y]=value;
-		changed(x,y);
+		changed(x,y,value);
 	}
 	
-	public synchronized void changed(int x,int y){
-		if (changedPosHead>=changedXPos.length){
-			int[] changedXPos_=new int[(int) (changedXPos.length*1.5)];
-			int[] changedYPos_=new int[(int) (changedYPos.length*1.5)];
-			System.arraycopy(changedXPos, 0, changedXPos_, 0, changedPosHead);
-			System.arraycopy(changedYPos, 0, changedYPos_, 0, changedPosHead);
-			changedXPos=changedXPos_;
-			changedYPos=changedYPos_;
-		}
-		
-		changedXPos[changedPosHead]=x;
-		changedYPos[changedPosHead]=y;
-		changedPosHead++;
+	private void changed(int x, int y,boolean to) {
+		(to?trueQueue:falseQueue).add(x, y);
 	}
 	
 	public void nextFrame(){
