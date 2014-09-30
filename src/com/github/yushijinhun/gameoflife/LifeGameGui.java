@@ -82,7 +82,6 @@ public class LifeGameGui extends Canvas{
 				public boolean rendering=false;
 				
 				public void run() {
-					rendering=true;
 					synchronized (engine) {
 						if (drawFull){
 							cellsBufferG.setColor(Color.DARK_GRAY);
@@ -159,6 +158,7 @@ public class LifeGameGui extends Canvas{
 						lastRenderTimeBegin=System.currentTimeMillis();
 						if (!cellsRender.rendering){
 							renderThreadPool.execute(cellsRender);
+							cellsRender.rendering=true;
 						}
 						
 						synchronized (buffer) {
