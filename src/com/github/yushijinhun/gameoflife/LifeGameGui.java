@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import com.github.yushijinhun.nbt4j.io.TagOutputStream;
@@ -38,7 +36,6 @@ public class LifeGameGui extends Canvas{
 	private static final Font fontBig=new Font("Dialog",Font.BOLD,16);
 	
 	public final LifeGameEngine engine;
-	public final Lock engineLock;
 	public int fps=0;
 	public long lastTickingTime=0;
 	public boolean showInfo=true;
@@ -67,7 +64,6 @@ public class LifeGameGui extends Canvas{
 	public LifeGameGui(double blockSize,LifeGameEngine theEngine) {
 		cellSize=blockSize;
 		drawFull=true;
-		engineLock=new ReentrantLock();
 		threadPool=Executors.newSingleThreadExecutor();
 		
 		if (cellSize<1){
@@ -87,29 +83,25 @@ public class LifeGameGui extends Canvas{
 				
 				public void run() {
 					rendering=true;
-					if (engineLock.tryLock()){
-						try{
-							if (drawFull){
-								cellsBufferG.setColor(Color.DARK_GRAY);
-								cellsBufferG.fillRect(0, 0, cellsBuffer.getWidth(), cellsBuffer.getHeight());
-								cellsBufferG.setColor(Color.GREEN);
-								for (int x=0;x<engine.width;x++){
-									for (int y=0;y<engine.height;y++){
-										if (engine.get(x, y)){
-											cellsBufferG.fillRect(x, y, 1, 1);
-										}
+					synchronized (engine) {
+						if (drawFull){
+							cellsBufferG.setColor(Color.DARK_GRAY);
+							cellsBufferG.fillRect(0, 0, cellsBuffer.getWidth(), cellsBuffer.getHeight());
+							cellsBufferG.setColor(Color.GREEN);
+							for (int x=0;x<engine.width;x++){
+								for (int y=0;y<engine.height;y++){
+									if (engine.get(x, y)){
+										cellsBufferG.fillRect(x, y, 1, 1);
 									}
 								}
-								
-								drawFull=false;
-							}else{
-								cellsBufferG.setColor(Color.GREEN);
-								renderChangedCellsQueue(engine.trueQueue);
-								cellsBufferG.setColor(Color.DARK_GRAY);
-								renderChangedCellsQueue(engine.falseQueue);
 							}
-						}finally{
-							engineLock.unlock();
+							
+							drawFull=false;
+						}else{
+							cellsBufferG.setColor(Color.GREEN);
+							renderChangedCellsQueue(engine.trueQueue);
+							cellsBufferG.setColor(Color.DARK_GRAY);
+							renderChangedCellsQueue(engine.falseQueue);
 						}
 					}
 					rendering=false;
@@ -212,11 +204,8 @@ public class LifeGameGui extends Canvas{
 						threadPool.execute(new Runnable() {
 							
 							public void run() {
-								engineLock.lock();
-								try{
+								synchronized (engine) {
 									engine.set(x, y, !engine.get(x, y));
-								}finally{
-									engineLock.unlock();
 								}
 							}
 						});
@@ -289,12 +278,9 @@ public class LifeGameGui extends Canvas{
 							public void run() {
 								isComputing=true;
 								long start=System.currentTimeMillis();
-								
-								engineLock.lock();
-								try{
+
+								synchronized (engine) {
 									engine.nextFrame();
-								}finally{
-									engineLock.unlock();
 								}
 								
 								lastTickingTime=System.currentTimeMillis()-start;
@@ -351,12 +337,9 @@ public class LifeGameGui extends Canvas{
 								@Override
 								public void run() {
 									NbtTagCompound comp=new NbtTagCompound("root");
-									
-									engineLock.lock();
-									try{
+
+									synchronized (engine) {
 										engine.writeToNBT(comp);
-									}finally{
-										engineLock.unlock();
 									}
 									
 									
