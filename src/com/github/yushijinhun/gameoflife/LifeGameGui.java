@@ -402,10 +402,15 @@ public class LifeGameGui extends Canvas{
 		
 		if (fistOpen){
 			g2d.setFont(fontBig);
-			renderString(g2d,"Game of Life", 80, 90);
-			renderString(g2d,"by yushijinhun", 80, 105);
+			renderString(g2d,"Game of Life v0.2", 80, 80);
+			renderString(g2d,"by yushijinhun", 80, 95);
 			renderString(g2d,"Press N to show next frame", 80, 120);
-			renderString(g2d,"Click to change one cell's status", 80, 135);
+			renderString(g2d,"Press Z to enlarge", 80, 135);
+			renderString(g2d,"Press X to shrink", 80, 150);
+			renderString(g2d,"Press F1 to show/hide information", 80, 165);
+			renderString(g2d,"Press Ctrl+S to save the game", 80, 180);
+			renderString(g2d,"Press Ctrl+0 to set scale to 1", 80, 195);
+			renderString(g2d,"Click to change one cell's status", 80, 210);
 		}
 		
 	}
