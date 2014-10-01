@@ -1,12 +1,15 @@
 package com.github.yushijinhun.gameoflife;
 
+import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class LifeGameWindow extends Frame {
 	
 	private static final long serialVersionUID = 1L;
+	private static final float MAXIMIZE_FACTOR=0.75f;
 	
 	public LifeGameGui gui;
 	
@@ -36,5 +39,11 @@ public class LifeGameWindow extends Frame {
 		pack();
 		setSize((int) (Math.rint(gui.getX()+gui.engine.width*gui.getCellSize()+8)),(int) (Math.rint(gui.getY()+gui.engine.height*gui.getCellSize()+8)));
 		setVisible(true);
+		
+		//when the window's size > 3/4 the screen's size, set the window maximized.
+		Dimension d=Toolkit.getDefaultToolkit().getScreenSize();
+		if (d.getWidth()*MAXIMIZE_FACTOR<=getWidth()||d.getHeight()*MAXIMIZE_FACTOR<=getHeight()){
+			setExtendedState(MAXIMIZED_BOTH);
+		}
 	}
 }
