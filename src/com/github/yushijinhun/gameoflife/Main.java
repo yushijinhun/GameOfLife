@@ -66,14 +66,14 @@ public final class Main {
 				in=new TagInputStream(new FileInputStream(filePath));
 				return LifeGameEngine.readFromNBT(in.readTag(),threads);
 			}catch(IOException e){
-				ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading game, an IOException occurred.\n");
+				ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading the game, an IOException occurred.\n");
 				throw new IOError(e);
 			}finally{
 				if (in!=null){
 					try {
 						in.close();
 					} catch (IOException e) {
-						ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading game, an IOException occurred.\n");
+						ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading the game, an IOException occurred.\n");
 						throw new IOError(e);
 					}
 				}

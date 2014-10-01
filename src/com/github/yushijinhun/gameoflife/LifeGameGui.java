@@ -208,13 +208,13 @@ public class LifeGameGui extends Canvas{
 				out=new TagOutputStream(new FileOutputStream(file));
 				out.writeTag(comp, true);
 			}catch(IOException e1){
-				ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "When saving game, an IOException occurred.\n");
+				ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "When saving the game, an IOException occurred.\n");
 			}finally{
 				if (out!=null){
 					try {
 						out.close();
 					} catch (IOException e1) {
-						ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "When saving game, an IOException occurred.\n");
+						ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "When saving the game, an IOException occurred.\n");
 						return;
 					}
 				}
