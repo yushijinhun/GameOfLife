@@ -1,12 +1,9 @@
 package com.github.yushijinhun.gameoflife;
 
-import java.io.CharArrayWriter;
 import java.io.FileInputStream;
 import java.io.IOError;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Random;
-import javax.swing.JOptionPane;
 import com.github.yushijinhun.nbt4j.io.TagInputStream;
 
 public final class Main {
@@ -14,10 +11,10 @@ public final class Main {
 	private static int width=160;
 	private static int height=120;
 	private static boolean random;
-	private static int blockSize=4;
+	private static double scale=4;
 	private static LifeGameWindow window;
-	private static boolean read=false;
 	private static String filePath=null;
+	private static int threads=LifeGameEngineConfiguration.DEFAULT_THREADS;
 	
 	public static void main(final String[] args) {
 		new Thread(new ThreadGroup("lifegame"){
@@ -27,19 +24,12 @@ public final class Main {
 				
 				if (window!=null){
 					window.gui.shutdown();
+					window=null;
+					System.gc();
 				}
 				
-				StringBuilder sb=new StringBuilder();
-				sb.append("Game of Life has crashed!\n\nException in thread \""+t.getName()+"\" ");
-				
-				CharArrayWriter writer=new CharArrayWriter();
-				e.printStackTrace(new PrintWriter(writer));
-				sb.append(writer.toCharArray());
-				writer.close();
-				
-				JOptionPane.showMessageDialog(null, sb.toString().replaceAll("\t", "    "), "Game of Life", JOptionPane.ERROR_MESSAGE);
-				
 				interrupt();
+				ExceptionUtil.showExceptionDialog(e, t, "Game Of Life has crashed!\n");
 			}
 			
 		}, new Runnable() {
@@ -53,7 +43,7 @@ public final class Main {
 	
 	private static void main0(String[] args) {
 		readArgs(args);
-		window=new LifeGameWindow(blockSize,createEngine());
+		window=new LifeGameWindow(scale,createEngine());
 		
 		if (random){
 			LifeGameEngine engine=window.gui.engine;
@@ -70,24 +60,26 @@ public final class Main {
 	}
 	
 	private static LifeGameEngine createEngine(){
-		if (read){
+		if (filePath!=null){
 			TagInputStream in=null;
 			try{
 				in=new TagInputStream(new FileInputStream(filePath));
-				return LifeGameEngine.readFromNBT(in.readTag());
+				return LifeGameEngine.readFromNBT(in.readTag(),threads);
 			}catch(IOException e){
+				ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading the game, an IOException occurred.\n");
 				throw new IOError(e);
 			}finally{
 				if (in!=null){
 					try {
 						in.close();
 					} catch (IOException e) {
+						ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading the game, an IOException occurred.\n");
 						throw new IOError(e);
 					}
 				}
 			}
 		}else{
-			return new LifeGameEngine(width, height);
+			return new LifeGameEngine(new LifeGameEngineConfiguration(width, height, threads));
 		}
 	}
 	
@@ -104,14 +96,18 @@ public final class Main {
 					random=true;
 					break;
 					
-				case "-blockSize":
-					blockSize=Integer.parseInt(args[i+1]);
+				case "-scale":
+					scale=Double.parseDouble(args[i+1]);
 					i+=1;
 					break;
 					
 				case "-read":
-					read=true;
 					filePath=args[i+1];
+					i+=1;
+					break;
+					
+				case "-threads":
+					threads=Integer.valueOf(args[i+1]);
 					i+=1;
 					break;
 			}
