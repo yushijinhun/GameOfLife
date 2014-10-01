@@ -13,8 +13,8 @@ public final class Main {
 	private static boolean random;
 	private static double scale=4;
 	private static LifeGameWindow window;
-	private static boolean readFromFile=false;
 	private static String filePath=null;
+	private static int threads=LifeGameEngineConfiguration.DEFAULT_THREADS;
 	
 	public static void main(final String[] args) {
 		new Thread(new ThreadGroup("lifegame"){
@@ -60,11 +60,11 @@ public final class Main {
 	}
 	
 	private static LifeGameEngine createEngine(){
-		if (readFromFile){
+		if (filePath!=null){
 			TagInputStream in=null;
 			try{
 				in=new TagInputStream(new FileInputStream(filePath));
-				return LifeGameEngine.readFromNBT(in.readTag());
+				return LifeGameEngine.readFromNBT(in.readTag(),threads);
 			}catch(IOException e){
 				ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading game, an IOException occurred.\n");
 				throw new IOError(e);
@@ -79,7 +79,7 @@ public final class Main {
 				}
 			}
 		}else{
-			return new LifeGameEngine(new LifeGameEngineConfiguration(width, height));
+			return new LifeGameEngine(new LifeGameEngineConfiguration(width, height, threads));
 		}
 	}
 	
@@ -96,14 +96,18 @@ public final class Main {
 					random=true;
 					break;
 					
-				case "-blockSize":
+				case "-scale":
 					scale=Double.parseDouble(args[i+1]);
 					i+=1;
 					break;
 					
 				case "-read":
-					readFromFile=true;
 					filePath=args[i+1];
+					i+=1;
+					break;
+					
+				case "-threads":
+					threads=Integer.valueOf(args[i+1]);
 					i+=1;
 					break;
 			}
