@@ -1,12 +1,9 @@
 package com.github.yushijinhun.gameoflife;
 
-import java.io.CharArrayWriter;
 import java.io.FileInputStream;
 import java.io.IOError;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Random;
-import javax.swing.JOptionPane;
 import com.github.yushijinhun.nbt4j.io.TagInputStream;
 
 public final class Main {
@@ -14,9 +11,9 @@ public final class Main {
 	private static int width=160;
 	private static int height=120;
 	private static boolean random;
-	private static double blockSize=4;
+	private static double scale=4;
 	private static LifeGameWindow window;
-	private static boolean read=false;
+	private static boolean readFromFile=false;
 	private static String filePath=null;
 	
 	public static void main(final String[] args) {
@@ -30,16 +27,7 @@ public final class Main {
 					window=null;
 					System.gc();
 				}
-				
-				StringBuilder sb=new StringBuilder();
-				sb.append("Game of Life has crashed!\n\nException in thread \""+t.getName()+"\" ");
-				
-				CharArrayWriter writer=new CharArrayWriter();
-				e.printStackTrace(new PrintWriter(writer));
-				sb.append(writer.toCharArray());
-				writer.close();
-				
-				JOptionPane.showMessageDialog(null, sb.toString().replaceAll("\t", "    "), "Game of Life", JOptionPane.ERROR_MESSAGE);
+				ExceptionUtil.showExceptionDialog(e, t, "Game Of Life has crashed!\n");
 				
 				interrupt();
 			}
@@ -55,7 +43,7 @@ public final class Main {
 	
 	private static void main0(String[] args) {
 		readArgs(args);
-		window=new LifeGameWindow(blockSize,createEngine());
+		window=new LifeGameWindow(scale,createEngine());
 		
 		if (random){
 			LifeGameEngine engine=window.gui.engine;
@@ -72,18 +60,20 @@ public final class Main {
 	}
 	
 	private static LifeGameEngine createEngine(){
-		if (read){
+		if (readFromFile){
 			TagInputStream in=null;
 			try{
 				in=new TagInputStream(new FileInputStream(filePath));
 				return LifeGameEngine.readFromNBT(in.readTag());
 			}catch(IOException e){
+				ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading game, an IOException occurred.\n");
 				throw new IOError(e);
 			}finally{
 				if (in!=null){
 					try {
 						in.close();
 					} catch (IOException e) {
+						ExceptionUtil.showExceptionDialog(e, Thread.currentThread(), "When loading game, an IOException occurred.\n");
 						throw new IOError(e);
 					}
 				}
@@ -107,12 +97,12 @@ public final class Main {
 					break;
 					
 				case "-blockSize":
-					blockSize=Double.parseDouble(args[i+1]);
+					scale=Double.parseDouble(args[i+1]);
 					i+=1;
 					break;
 					
 				case "-read":
-					read=true;
+					readFromFile=true;
 					filePath=args[i+1];
 					i+=1;
 					break;

@@ -56,12 +56,11 @@ public class LifeGameEngine {
 	
 	public final int width;
 	public final int height;
-	public int changedPosHead;
 	public final LifeGameChangedCellsQueue trueQueue;
 	public final LifeGameChangedCellsQueue falseQueue;
 	
 	private final int threads;
-	private int cells;
+	private int cellsCount;
 	private long ticks=0;
 	private boolean[][] lifes;
 	private boolean[][] bufferLifes;
@@ -71,12 +70,11 @@ public class LifeGameEngine {
 	public LifeGameEngine(LifeGameEngineConfiguration config) {
 		this.width=config.width;
 		this.height=config.height;
-		cells=width*height;
-		changedPosHead=0;
+		cellsCount=width*height;
 		threads=config.threads;
 		threadPool=Executors.newFixedThreadPool(threads);
-		trueQueue=new LifeGameChangedCellsQueue(cells);
-		falseQueue=new LifeGameChangedCellsQueue(cells);
+		trueQueue=new LifeGameChangedCellsQueue(cellsCount);
+		falseQueue=new LifeGameChangedCellsQueue(cellsCount);
 		
 		lifes=new boolean[width][];
 		for (int i=0;i<width;i++){
@@ -127,9 +125,9 @@ public class LifeGameEngine {
 			}
 		}
 		
-		boolean[][] bufferLifes_=lifes;
+		boolean[][] usedBufferLifes=lifes;
 		lifes=bufferLifes;
-		bufferLifes=bufferLifes_;
+		bufferLifes=usedBufferLifes;
 		
 		ticks++;
 	}
