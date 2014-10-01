@@ -27,9 +27,9 @@ public final class Main {
 					window=null;
 					System.gc();
 				}
-				ExceptionUtil.showExceptionDialog(e, t, "Game Of Life has crashed!\n");
 				
 				interrupt();
+				ExceptionUtil.showExceptionDialog(e, t, "Game Of Life has crashed!\n");
 			}
 			
 		}, new Runnable() {
