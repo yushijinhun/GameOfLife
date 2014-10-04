@@ -1,4 +1,4 @@
-package com.github.yushijinhun.gameoflife;
+package com.github.yushijinhun.gameoflife.core;
 
 public class LifeGameChangedCellsQueue {
 	

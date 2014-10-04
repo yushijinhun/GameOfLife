@@ -1,4 +1,4 @@
-package com.github.yushijinhun.gameoflife;
+package com.github.yushijinhun.gameoflife.core;
 
 import java.io.FileInputStream;
 import java.io.IOError;

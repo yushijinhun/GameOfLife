@@ -1,4 +1,4 @@
-package com.github.yushijinhun.gameoflife;
+package com.github.yushijinhun.gameoflife.core;
 
 import java.awt.Dimension;
 import java.awt.Frame;
