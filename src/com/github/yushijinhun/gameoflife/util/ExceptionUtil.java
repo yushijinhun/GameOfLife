@@ -1,4 +1,4 @@
-package com.github.yushijinhun.gameoflife.core;
+package com.github.yushijinhun.gameoflife.util;
 
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;

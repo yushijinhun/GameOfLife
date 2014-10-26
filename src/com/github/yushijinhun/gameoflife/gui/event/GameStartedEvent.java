@@ -1,7 +1,7 @@
 package com.github.yushijinhun.gameoflife.gui.event;
 
 import java.util.EventObject;
-import com.github.yushijinhun.gameoflife.core.LifeGameWindow;
+import com.github.yushijinhun.gameoflife.gui.LifeGameWindow;
 
 public class GameStartedEvent extends EventObject {
 

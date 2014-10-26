@@ -1,10 +1,11 @@
-package com.github.yushijinhun.gameoflife.core;
+package com.github.yushijinhun.gameoflife.gui;
 
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
 
 public class LifeGameWindow extends Frame {
 	

@@ -1,4 +1,4 @@
-package com.github.yushijinhun.gameoflife.core;
+package com.github.yushijinhun.gameoflife.gui;
 
 import java.awt.Canvas;
 import java.awt.Color;
@@ -20,6 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import com.github.yushijinhun.gameoflife.core.LifeGameChangedCellsQueue;
+import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
+import com.github.yushijinhun.gameoflife.util.ExceptionUtil;
 import com.github.yushijinhun.nbt4j.io.TagOutputStream;
 import com.github.yushijinhun.nbt4j.tags.NbtTagCompound;
 

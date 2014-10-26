@@ -5,11 +5,9 @@ import com.github.yushijinhun.gameoflife.gui.event.GameStartedEvent;
 import com.github.yushijinhun.gameoflife.gui.event.GameStartedListener;
 
 public class SettingWindow extends JFrame {
-	
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
+	
 	private final SettingPanel settingPanel;
 	
 	public SettingWindow() {

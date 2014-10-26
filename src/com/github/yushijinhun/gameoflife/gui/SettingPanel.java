@@ -18,20 +18,17 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import com.github.yushijinhun.gameoflife.core.ExceptionUtil;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngineConfiguration;
-import com.github.yushijinhun.gameoflife.core.LifeGameWindow;
 import com.github.yushijinhun.gameoflife.gui.event.GameStartedEvent;
 import com.github.yushijinhun.gameoflife.gui.event.GameStartedListener;
+import com.github.yushijinhun.gameoflife.util.ExceptionUtil;
 import com.github.yushijinhun.nbt4j.io.TagInputStream;
 
 public class SettingPanel extends JPanel {
-	
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
+
 	private final JTextField textWidth;
 	private final JTextField textHeight;
 	private final JTextField textFilePath;
