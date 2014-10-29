@@ -9,6 +9,9 @@ import javax.swing.JButton;
 import com.github.yushijinhun.gameoflife.gui.event.DataProcessEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 public class GotoPanel extends DataInputPanel {
 
@@ -69,10 +72,7 @@ public class GotoPanel extends DataInputPanel {
 		buttonGoto.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
-				poseDataProcessEvent(new DataProcessEvent(this, GotoPanel.this.window));
-				int x=Integer.parseInt(textX.getText());
-				int y=Integer.parseInt(textY.getText());
-				GotoPanel.this.window.gui.gotoPos(x, y);
+				onButtonPressed();
 			}
 		});
 		GridBagConstraints gbc_buttonGoto = new GridBagConstraints();
@@ -89,5 +89,24 @@ public class GotoPanel extends DataInputPanel {
 		
 		textX.addKeyListener(numberOnly);
 		textY.addKeyListener(numberOnly);
+		
+		KeyListener enterListener=new KeyAdapter() {
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode()==KeyEvent.VK_ENTER&&buttonGoto.isEnabled()){
+					onButtonPressed();
+				}
+			}
+		};
+		textX.addKeyListener(enterListener);
+		textY.addKeyListener(enterListener);
+	}
+	
+	private void onButtonPressed(){
+		poseDataProcessEvent(new DataProcessEvent(this, GotoPanel.this.window));
+		int x=Integer.parseInt(textX.getText());
+		int y=Integer.parseInt(textY.getText());
+		GotoPanel.this.window.gui.gotoPos(x, y);
 	}
 }

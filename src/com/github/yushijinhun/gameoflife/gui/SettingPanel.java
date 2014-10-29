@@ -1,5 +1,7 @@
 package com.github.yushijinhun.gameoflife.gui;
 
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
@@ -7,6 +9,9 @@ import javax.swing.JTextField;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,6 +49,7 @@ public class SettingPanel extends DataInputPanel {
 	
 	private final ButtonGroup gameModeGroup;
 	private final NumberOnlyKeyListener numberOnly;
+	private final Runnable starter;
 	
 	public SettingPanel() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
@@ -233,41 +239,38 @@ public class SettingPanel extends DataInputPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int threads=Integer.parseInt(textThreads.getText());
-				double scale=Double.parseDouble(textScale.getText());
-				LifeGameEngine engine=null;
-				
-				if (buttonNewGame.isSelected()){
-					int width=Integer.parseInt(textWidth.getText());
-					int height=Integer.parseInt(textHeight.getText());
-					engine=new LifeGameEngine(new LifeGameEngineConfiguration(width, height, threads));
-				}else{
-					File file=new File(textFilePath.getText());
-					
-					TagInputStream in=null;
-					try {
-						in=new TagInputStream(new BufferedInputStream(new FileInputStream(file)));
-						engine=LifeGameEngine.readFromNBT(in.readTag(), threads);
-					} catch (IOException e1) {
-						ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "An I/O exception occurred when read data.");
-					} finally {
-						if (in!=null){
-							try {
-								in.close();
-							} catch (IOException e1) {
-								ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "An I/O exception occurred when close stream.");
-							}
-						}
-					}
-				}
-				
-				if (engine!=null){
-					LifeGameWindow window=new LifeGameWindow(scale, engine);
-					poseDataProcessEvent(new DataProcessEvent(this, window));
-					window.setVisible(true);
-				}
+				onButtonPressed();
 			}
 		});
+		
+		KeyListener enterListener=new KeyAdapter() {
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode()==KeyEvent.VK_ENTER&&buttonStart.isEnabled()){
+					onButtonPressed();
+				}
+			}
+		};
+		
+		textWidth.addKeyListener(enterListener);
+		textHeight.addKeyListener(enterListener);
+		textScale.addKeyListener(enterListener);
+		textThreads.addKeyListener(enterListener);
+		textFilePath.addKeyListener(enterListener);
+		
+		starter=new Runnable() {
+			
+			@Override
+			public void run() {
+				try{
+					setAllEnabled(false, SettingPanel.this);
+					start();
+				}finally{
+					setAllEnabled(true, SettingPanel.this);
+				}
+			}
+		};
 	}
 
 	private void updateGameModeStatus() {
@@ -291,5 +294,56 @@ public class SettingPanel extends DataInputPanel {
 			numberOnly.removeListen(textHeight);
 		}
 		numberOnly.update();
+	}
+	
+	private void onButtonPressed(){
+		new Thread(starter).start();
+	}
+	
+	private void start(){
+		int threads=Integer.parseInt(textThreads.getText());
+		double scale=Double.parseDouble(textScale.getText());
+		LifeGameEngine engine=null;
+		
+		if (buttonNewGame.isSelected()){
+			int width=Integer.parseInt(textWidth.getText());
+			int height=Integer.parseInt(textHeight.getText());
+			engine=new LifeGameEngine(new LifeGameEngineConfiguration(width, height, threads));
+		}else{
+			File file=new File(textFilePath.getText());
+			
+			TagInputStream in=null;
+			try {
+				in=new TagInputStream(new BufferedInputStream(new FileInputStream(file)));
+				engine=LifeGameEngine.readFromNBT(in.readTag(), threads);
+			} catch (IOException e1) {
+				ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "An I/O exception occurred when read data.");
+			} finally {
+				if (in!=null){
+					try {
+						in.close();
+					} catch (IOException e1) {
+						ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "An I/O exception occurred when close stream.");
+					}
+				}
+			}
+		}
+		
+		if (engine!=null){
+			LifeGameWindow window=new LifeGameWindow(scale, engine);
+			poseDataProcessEvent(new DataProcessEvent(this, window));
+			window.setVisible(true);
+		}
+	}
+	
+	private void setAllEnabled(boolean e,Container con){
+		Component[] coms=con.getComponents();
+		for (int i = 0; i < coms.length; i++) {
+			Component com = coms[i];
+			com.setEnabled(e);
+			if (com instanceof Container){
+				setAllEnabled(e, (Container) com);
+			}
+		}
 	}
 }
