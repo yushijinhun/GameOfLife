@@ -71,15 +71,15 @@ public class GotoPanel extends JPanel {
 		buttonGoto.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
-				int x=Integer.parseInt(textX.getText());
-				int y=Integer.parseInt(textY.getText());
-				GotoPanel.this.window.gui.gotoPos(x, y);
-				
 				GotoEvent event=new GotoEvent(this, GotoPanel.this.window);
 				GotoListener[] listeners=getGotoListeners();
 				for (int i = 0; i < listeners.length; i++) {
 					listeners[i].onGoto(event);
 				}
+				
+				int x=Integer.parseInt(textX.getText());
+				int y=Integer.parseInt(textY.getText());
+				GotoPanel.this.window.gui.gotoPos(x, y);
 			}
 		});
 		GridBagConstraints gbc_buttonGoto = new GridBagConstraints();
