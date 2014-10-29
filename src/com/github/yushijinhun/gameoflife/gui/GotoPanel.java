@@ -71,8 +71,8 @@ public class GotoPanel extends JPanel {
 		buttonGoto.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
-				double x=Double.parseDouble(textX.getText());
-				double y=Double.parseDouble(textY.getText());
+				int x=Integer.parseInt(textX.getText());
+				int y=Integer.parseInt(textY.getText());
 				GotoPanel.this.window.gui.gotoPos(x, y);
 				
 				GotoEvent event=new GotoEvent(this, GotoPanel.this.window);
@@ -93,6 +93,9 @@ public class GotoPanel extends JPanel {
 		numberOnly.addControl(buttonGoto);
 		numberOnly.addListen(textX);
 		numberOnly.addListen(textY);
+		
+		textX.addKeyListener(numberOnly);
+		textY.addKeyListener(numberOnly);
 	}
 	
 	public void addGotoListener(GotoListener l){
