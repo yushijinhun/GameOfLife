@@ -3,6 +3,8 @@ package com.github.yushijinhun.gameoflife.gui;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Toolkit;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
@@ -12,7 +14,7 @@ public class LifeGameWindow extends Frame {
 	private static final long serialVersionUID = 1L;
 	private static final float MAXIMIZE_FACTOR=0.75f;
 	
-	public LifeGameGui gui;
+	public final LifeGameGui gui;
 	
 	public LifeGameWindow(double blockSize,LifeGameEngine engine) {
 		gui=new LifeGameGui(blockSize,engine);
@@ -33,6 +35,20 @@ public class LifeGameWindow extends Frame {
 			@Override
 			public void windowGainedFocus(WindowEvent e) {
 				gui.requestFocus();
+			}
+		});
+		
+		gui.addKeyListener(new KeyAdapter(){
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				switch (e.getKeyCode()){
+					case KeyEvent.VK_G:
+						if (e.isControlDown()){
+							new GotoWindow(LifeGameWindow.this).setVisible(true);
+						}
+						break;
+				}
 			}
 		});
 		

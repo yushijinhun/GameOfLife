@@ -338,19 +338,19 @@ public class LifeGameGui extends Canvas{
 							nextScale1=MAX_SCALE;
 						}
 						
-						setCenter(nextScale1,mouseRelativeX,mouseRelativeY);
+						gotoPos(nextScale1,mouseRelativeX,mouseRelativeY);
 						scale=nextScale1;
 						break;
 						
 					case KeyEvent.VK_X:
 						double nextScale2=scale*SCALE_FACTOR;
-						setCenter(nextScale2,mouseRelativeX,mouseRelativeY);
+						gotoPos(nextScale2,mouseRelativeX,mouseRelativeY);
 						scale=nextScale2;
 						break;
 						
 					case KeyEvent.VK_0:
 						if (e.isControlDown()){
-							setCenter(1d,mouseRelativeX,mouseRelativeY);
+							gotoPos(1d,mouseRelativeX,mouseRelativeY);
 							scale=1d;
 						}
 						break;
@@ -439,8 +439,12 @@ public class LifeGameGui extends Canvas{
 		return scale;
 	}
 	
-	public void setCenter(double scale,int x,int y){
+	public void gotoPos(double scale,double x,double y){
 		xOffset=(int) (mouseX-x*scale);
 		yOffset=(int) (mouseY-y*scale);
+	}
+	
+	public void gotoPos(double x,double y){
+		gotoPos(scale,x,y);
 	}
 }

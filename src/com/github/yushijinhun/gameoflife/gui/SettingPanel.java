@@ -307,4 +307,8 @@ public class SettingPanel extends JPanel {
 	public void addGameStartedListener(GameStartedListener l){
 		listenerList.add(GameStartedListener.class,l);
 	}
+	
+	public GameStartedListener[] getGameStartedListener(){
+		return listenerList.getListeners(GameStartedListener.class);
+	}
 }
