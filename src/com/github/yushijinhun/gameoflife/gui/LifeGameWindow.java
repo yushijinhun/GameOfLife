@@ -16,8 +16,11 @@ public class LifeGameWindow extends Frame {
 	
 	public final LifeGameGui gui;
 	
+	private final GotoWindow gotoWindow;
+	
 	public LifeGameWindow(double blockSize,LifeGameEngine engine) {
 		gui=new LifeGameGui(blockSize,engine);
+		gotoWindow=new GotoWindow(this);
 		add(gui);
 		
 		addWindowListener(new WindowAdapter() {
@@ -45,7 +48,7 @@ public class LifeGameWindow extends Frame {
 				switch (e.getKeyCode()){
 					case KeyEvent.VK_G:
 						if (e.isControlDown()){
-							new GotoWindow(LifeGameWindow.this).setVisible(true);
+							gotoWindow.setVisible(true);
 						}
 						break;
 				}

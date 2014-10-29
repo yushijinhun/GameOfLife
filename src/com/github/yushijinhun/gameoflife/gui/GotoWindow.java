@@ -1,17 +1,17 @@
 package com.github.yushijinhun.gameoflife.gui;
 
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import com.github.yushijinhun.gameoflife.gui.event.GotoEvent;
 import com.github.yushijinhun.gameoflife.gui.event.GotoListener;
 
-public class GotoWindow extends JFrame {
+public class GotoWindow extends JDialog {
 
 	private static final long serialVersionUID = 1L;
 	
 	private final GotoPanel gotoPanel;
 	
 	public GotoWindow(LifeGameWindow window) {
-		super("Game of Life");
+		super(window, "Goto",true);
 		gotoPanel=new GotoPanel(window);
 		add(gotoPanel);
 		
@@ -20,7 +20,6 @@ public class GotoWindow extends JFrame {
 			@Override
 			public void onGoto(GotoEvent e) {
 				setVisible(false);
-				dispose();
 			}
 		});
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
