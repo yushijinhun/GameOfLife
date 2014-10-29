@@ -1,8 +1,8 @@
 package com.github.yushijinhun.gameoflife.gui;
 
 import javax.swing.JDialog;
-import com.github.yushijinhun.gameoflife.gui.event.GotoEvent;
-import com.github.yushijinhun.gameoflife.gui.event.GotoListener;
+import com.github.yushijinhun.gameoflife.gui.event.DataProcessEvent;
+import com.github.yushijinhun.gameoflife.gui.event.DataProcessListener;
 
 public class GotoWindow extends JDialog {
 
@@ -15,10 +15,10 @@ public class GotoWindow extends JDialog {
 		gotoPanel=new GotoPanel(window);
 		add(gotoPanel);
 		
-		gotoPanel.addGotoListener(new GotoListener() {
+		gotoPanel.addDataProcessListener(new DataProcessListener() {
 			
 			@Override
-			public void onGoto(GotoEvent e) {
+			public void process(DataProcessEvent e) {
 				setVisible(false);
 			}
 		});

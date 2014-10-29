@@ -1,6 +1,5 @@
 package com.github.yushijinhun.gameoflife.gui;
 
-import javax.swing.JPanel;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
@@ -20,12 +19,11 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngineConfiguration;
-import com.github.yushijinhun.gameoflife.gui.event.GameStartedEvent;
-import com.github.yushijinhun.gameoflife.gui.event.GameStartedListener;
+import com.github.yushijinhun.gameoflife.gui.event.DataProcessEvent;
 import com.github.yushijinhun.gameoflife.util.ExceptionUtil;
 import com.github.yushijinhun.nbt4j.io.TagInputStream;
 
-public class SettingPanel extends JPanel {
+public class SettingPanel extends DataInputPanel {
 
 	private static final long serialVersionUID = 1L;
 
@@ -265,13 +263,8 @@ public class SettingPanel extends JPanel {
 				
 				if (engine!=null){
 					LifeGameWindow window=new LifeGameWindow(scale, engine);
+					poseDataProcessEvent(new DataProcessEvent(this, window));
 					window.setVisible(true);
-					
-					GameStartedEvent event=new GameStartedEvent(this, window);
-					GameStartedListener[] listeners=listenerList.getListeners(GameStartedListener.class);
-					for (int i = 0; i < listeners.length; i++) {
-						listeners[i].gameStarted(event);
-					}
 				}
 			}
 		});
@@ -298,17 +291,5 @@ public class SettingPanel extends JPanel {
 			numberOnly.removeListen(textHeight);
 		}
 		numberOnly.update();
-	}
-	
-	public void removeGameStartedListener(GameStartedListener l){
-		listenerList.remove(GameStartedListener.class, l);
-	}
-	
-	public void addGameStartedListener(GameStartedListener l){
-		listenerList.add(GameStartedListener.class,l);
-	}
-	
-	public GameStartedListener[] getGameStartedListener(){
-		return listenerList.getListeners(GameStartedListener.class);
 	}
 }

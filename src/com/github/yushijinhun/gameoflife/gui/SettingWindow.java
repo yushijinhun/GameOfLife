@@ -1,8 +1,8 @@
 package com.github.yushijinhun.gameoflife.gui;
 
 import javax.swing.JFrame;
-import com.github.yushijinhun.gameoflife.gui.event.GameStartedEvent;
-import com.github.yushijinhun.gameoflife.gui.event.GameStartedListener;
+import com.github.yushijinhun.gameoflife.gui.event.DataProcessEvent;
+import com.github.yushijinhun.gameoflife.gui.event.DataProcessListener;
 
 public class SettingWindow extends JFrame {
 
@@ -15,10 +15,10 @@ public class SettingWindow extends JFrame {
 		settingPanel=new SettingPanel();
 		add(settingPanel);
 		
-		settingPanel.addGameStartedListener(new GameStartedListener() {
+		settingPanel.addDataProcessListener(new DataProcessListener() {
 			
 			@Override
-			public void gameStarted(GameStartedEvent e) {
+			public void process(DataProcessEvent e) {
 				setVisible(false);
 				dispose();
 			}

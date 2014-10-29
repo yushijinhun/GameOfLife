@@ -1,18 +1,16 @@
 package com.github.yushijinhun.gameoflife.gui;
 
-import javax.swing.JPanel;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import javax.swing.JTextField;
 import javax.swing.JButton;
-import com.github.yushijinhun.gameoflife.gui.event.GotoEvent;
-import com.github.yushijinhun.gameoflife.gui.event.GotoListener;
+import com.github.yushijinhun.gameoflife.gui.event.DataProcessEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
-public class GotoPanel extends JPanel {
+public class GotoPanel extends DataInputPanel {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -71,12 +69,7 @@ public class GotoPanel extends JPanel {
 		buttonGoto.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
-				GotoEvent event=new GotoEvent(this, GotoPanel.this.window);
-				GotoListener[] listeners=getGotoListeners();
-				for (int i = 0; i < listeners.length; i++) {
-					listeners[i].onGoto(event);
-				}
-				
+				poseDataProcessEvent(new DataProcessEvent(this, GotoPanel.this.window));
 				int x=Integer.parseInt(textX.getText());
 				int y=Integer.parseInt(textY.getText());
 				GotoPanel.this.window.gui.gotoPos(x, y);
@@ -96,17 +89,5 @@ public class GotoPanel extends JPanel {
 		
 		textX.addKeyListener(numberOnly);
 		textY.addKeyListener(numberOnly);
-	}
-	
-	public void addGotoListener(GotoListener l){
-		listenerList.add(GotoListener.class, l);
-	}
-	
-	public void removeGotoListener(GotoListener l){
-		listenerList.remove(GotoListener.class, l);
-	}
-	
-	public GotoListener[] getGotoListeners(){
-		return listenerList.getListeners(GotoListener.class);
 	}
 }
