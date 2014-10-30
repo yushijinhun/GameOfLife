@@ -101,6 +101,8 @@ public class GotoPanel extends DataInputPanel {
 		};
 		textX.addKeyListener(enterListener);
 		textY.addKeyListener(enterListener);
+		
+		numberOnly.update();
 	}
 	
 	private void onButtonPressed(){

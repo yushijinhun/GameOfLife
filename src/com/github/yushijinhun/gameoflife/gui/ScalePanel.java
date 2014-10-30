@@ -9,13 +9,19 @@ import javax.swing.JButton;
 import com.github.yushijinhun.gameoflife.gui.event.DataProcessEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 public class ScalePanel extends DataInputPanel {
 
 	private static final long serialVersionUID = 1L;
 	
 	private final LifeGameWindow window;
-	private JTextField textScale;
+	private final JTextField textScale;
+	private final JLabel labelScale;
+
+	private final JButton buttonSet;
 
 	public ScalePanel(LifeGameWindow window) {
 		super();
@@ -27,7 +33,7 @@ public class ScalePanel extends DataInputPanel {
 		gridBagLayout.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);
 		
-		JLabel labelScale = new JLabel("Scale:");
+		labelScale = new JLabel("Scale:");
 		GridBagConstraints gbc_labelScale = new GridBagConstraints();
 		gbc_labelScale.insets = new Insets(0, 0, 5, 5);
 		gbc_labelScale.anchor = GridBagConstraints.EAST;
@@ -44,7 +50,7 @@ public class ScalePanel extends DataInputPanel {
 		add(textScale, gbc_textScale);
 		textScale.setColumns(10);
 		
-		JButton buttonSet = new JButton("Set");
+		buttonSet = new JButton("Set");
 		buttonSet.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
@@ -56,6 +62,24 @@ public class ScalePanel extends DataInputPanel {
 		gbc_buttonSet.gridx = 1;
 		gbc_buttonSet.gridy = 1;
 		add(buttonSet, gbc_buttonSet);
+		
+		NumberOnlyKeyListener numberOnly=new NumberOnlyKeyListener();
+		numberOnly.addControl(buttonSet);
+		numberOnly.addListen(textScale);
+		textScale.addKeyListener(numberOnly);
+		
+		KeyListener enterListener=new KeyAdapter() {
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode()==KeyEvent.VK_ENTER&&buttonSet.isEnabled()){
+					onButtonPressed();
+				}
+			}
+		};
+		textScale.addKeyListener(enterListener);
+		
+		numberOnly.update();
 	}
 	
 	private void onButtonPressed(){
