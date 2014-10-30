@@ -16,6 +16,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Random;
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -303,6 +304,7 @@ public class SettingPanel extends DataInputPanel {
 	private void start(){
 		int threads=Integer.parseInt(textThreads.getText());
 		double scale=Double.parseDouble(textScale.getText());
+		boolean random=chckbxRandom.isSelected();
 		LifeGameEngine engine=null;
 		
 		if (buttonNewGame.isSelected()){
@@ -324,6 +326,17 @@ public class SettingPanel extends DataInputPanel {
 						in.close();
 					} catch (IOException e1) {
 						ExceptionUtil.showExceptionDialog(e1, Thread.currentThread(), "An I/O exception occurred when close stream.");
+					}
+				}
+			}
+		}
+		
+		if (random){
+			Random ran=new Random();
+			synchronized (engine) {
+				for (int i=0;i<engine.width;i++){
+					for (int l=0;l<engine.height;l++){
+						engine.set(i, l, ran.nextBoolean());
 					}
 				}
 			}
