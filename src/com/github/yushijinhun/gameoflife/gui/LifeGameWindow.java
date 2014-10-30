@@ -17,10 +17,12 @@ public class LifeGameWindow extends Frame {
 	public final LifeGameGui gui;
 	
 	private final GotoWindow gotoWindow;
+	private final ScaleWindow scaleWindow;
 	
 	public LifeGameWindow(double blockSize,LifeGameEngine engine) {
 		gui=new LifeGameGui(blockSize,engine);
 		gotoWindow=new GotoWindow(this);
+		scaleWindow=new ScaleWindow(this);
 		add(gui);
 		
 		addWindowListener(new WindowAdapter() {
@@ -51,6 +53,11 @@ public class LifeGameWindow extends Frame {
 							gotoWindow.setVisible(true);
 						}
 						break;
+						
+					case KeyEvent.VK_D:
+						if (e.isControlDown()){
+							scaleWindow.setVisible(true);
+						}
 				}
 			}
 		});

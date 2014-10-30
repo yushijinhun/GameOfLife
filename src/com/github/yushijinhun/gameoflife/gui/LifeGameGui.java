@@ -442,6 +442,16 @@ public class LifeGameGui extends Canvas{
 		updateMousePos();
 	}
 	
+	public void setScale(double scale){
+		Point mouse=getMousePosition();
+		if (mouse!=null){
+			mouseX=mouse.x;
+			mouseY=mouse.y;
+		}
+		gotoPos(scale,mouseRelativeX,mouseRelativeY);
+		updateMousePos();
+	}
+	
 	public void updateMousePos(){
 		Point mouse=getMousePosition();
 		if (mouse!=null){
