@@ -1,4 +1,4 @@
-package com.github.yushijinhun.gameoflife;
+package com.github.yushijinhun.gameoflife.core;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

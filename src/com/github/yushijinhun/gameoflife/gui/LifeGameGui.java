@@ -1,4 +1,4 @@
-package com.github.yushijinhun.gameoflife;
+package com.github.yushijinhun.gameoflife.gui;
 
 import java.awt.Canvas;
 import java.awt.Color;
@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
@@ -20,6 +21,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import com.github.yushijinhun.gameoflife.core.LifeGameChangedCellsQueue;
+import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
+import com.github.yushijinhun.gameoflife.util.ExceptionUtil;
 import com.github.yushijinhun.nbt4j.io.TagOutputStream;
 import com.github.yushijinhun.nbt4j.tags.NbtTagCompound;
 
@@ -287,12 +291,12 @@ public class LifeGameGui extends Canvas{
 		addMouseMotionListener(new MouseAdapter() {
 			
 			public void mouseMoved(MouseEvent e){
-				updataMousePos(e);
+				updateMousePos();
 			}
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				updataMousePos(e);
+				updateMousePos();
 				
 				if (!isDragging){
 					return;
@@ -300,13 +304,6 @@ public class LifeGameGui extends Canvas{
 				
 				xOffset=e.getX()-dragBeginX;
 				yOffset=e.getY()-dragBeginY;
-			}
-			
-			private void updataMousePos(MouseEvent e){
-				mouseX=e.getX();
-				mouseY=e.getY();
-				mouseRelativeX=(int) (Math.rint(mouseX-xOffset)/scale);
-				mouseRelativeY=(int) (Math.rint(mouseY-yOffset)/scale);
 			}
 		});
 		
@@ -335,20 +332,17 @@ public class LifeGameGui extends Canvas{
 							nextScale1=MAX_SCALE;
 						}
 						
-						setCenter(nextScale1,mouseRelativeX,mouseRelativeY);
-						scale=nextScale1;
+						gotoPos(nextScale1,mouseRelativeX,mouseRelativeY);
 						break;
 						
 					case KeyEvent.VK_X:
 						double nextScale2=scale*SCALE_FACTOR;
-						setCenter(nextScale2,mouseRelativeX,mouseRelativeY);
-						scale=nextScale2;
+						gotoPos(nextScale2,mouseRelativeX,mouseRelativeY);
 						break;
 						
 					case KeyEvent.VK_0:
 						if (e.isControlDown()){
-							setCenter(1d,mouseRelativeX,mouseRelativeY);
-							scale=1d;
+							gotoPos(1d,mouseRelativeX,mouseRelativeY);
 						}
 						break;
 						
@@ -436,8 +430,35 @@ public class LifeGameGui extends Canvas{
 		return scale;
 	}
 	
-	public void setCenter(double scale,int x,int y){
+	private void gotoPos(double scale,int x,int y){
+		this.scale=scale;
 		xOffset=(int) (mouseX-x*scale);
 		yOffset=(int) (mouseY-y*scale);
+	}
+	
+	public void gotoPos(int x,int y){
+		updateMousePos();
+		gotoPos(scale,x,y);
+		updateMousePos();
+	}
+	
+	public void setScale(double scale){
+		Point mouse=getMousePosition();
+		if (mouse!=null){
+			mouseX=mouse.x;
+			mouseY=mouse.y;
+		}
+		gotoPos(scale,mouseRelativeX,mouseRelativeY);
+		updateMousePos();
+	}
+	
+	public void updateMousePos(){
+		Point mouse=getMousePosition();
+		if (mouse!=null){
+			mouseX=mouse.x;
+			mouseY=mouse.y;
+			mouseRelativeX=(int) (Math.rint(mouseX-xOffset)/scale);
+			mouseRelativeY=(int) (Math.rint(mouseY-yOffset)/scale);
+		}
 	}
 }
