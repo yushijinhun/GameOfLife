@@ -7,6 +7,7 @@ import java.util.Random;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngineConfiguration;
 import com.github.yushijinhun.gameoflife.gui.LifeGameWindow;
+import com.github.yushijinhun.gameoflife.gui.SettingWindow;
 import com.github.yushijinhun.gameoflife.util.ExceptionUtil;
 import com.github.yushijinhun.nbt4j.io.TagInputStream;
 
@@ -40,12 +41,16 @@ public final class Main {
 			
 			@Override
 			public void run() {
-				main0(args);
+				if (args.length==0){
+					startFromGUI();
+				}else{
+					startFromCommandline(args);
+				}
 			}
 		},"lifegame-main").start();
 	}
 	
-	private static void main0(String[] args) {
+	private static void startFromCommandline(String[] args) {
 		readArgs(args);
 		window=new LifeGameWindow(scale,createEngine());
 		
@@ -61,6 +66,10 @@ public final class Main {
 				}
 			}
 		}
+	}
+	
+	private static void startFromGUI(){
+		new SettingWindow().setVisible(true);
 	}
 	
 	private static LifeGameEngine createEngine(){
