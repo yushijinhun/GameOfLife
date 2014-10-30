@@ -60,6 +60,7 @@ public class LifeGameEngine {
 	public final LifeGameChangedCellsQueue falseQueue;
 	
 	private final int threads;
+	private final boolean singleThread;
 	private int cellsCount;
 	private long ticks=0;
 	private boolean[][] lifes;
@@ -72,7 +73,10 @@ public class LifeGameEngine {
 		this.height=config.height;
 		cellsCount=width*height;
 		threads=config.threads;
-		threadPool=Executors.newFixedThreadPool(threads);
+		singleThread=threads==1;
+		if (!singleThread){
+			threadPool=Executors.newFixedThreadPool(threads);
+		}
 		trueQueue=new LifeGameChangedCellsQueue(cellsCount);
 		falseQueue=new LifeGameChangedCellsQueue(cellsCount);
 		
@@ -89,13 +93,15 @@ public class LifeGameEngine {
 			bufferLifes[i]=new boolean[height];
 		}
 		
-		computingUnits=new ComputingUnit[threads];
-		int rowsEveryUnit=width/threads;
-		for (int i=0;i<threads;i++){
-			if (i==threads-1){
-				computingUnits[i]=new ComputingUnit(i*rowsEveryUnit, width);
-			}else{
-				computingUnits[i]=new ComputingUnit(i*rowsEveryUnit, rowsEveryUnit*(i+1));
+		if (!singleThread){
+			computingUnits=new ComputingUnit[threads];
+			int rowsEveryUnit=width/threads;
+			for (int i=0;i<threads;i++){
+				if (i==threads-1){
+					computingUnits[i]=new ComputingUnit(i*rowsEveryUnit, width);
+				}else{
+					computingUnits[i]=new ComputingUnit(i*rowsEveryUnit, rowsEveryUnit*(i+1));
+				}
 			}
 		}
 	}
@@ -114,14 +120,31 @@ public class LifeGameEngine {
 	}
 	
 	public void nextFrame(){
-		for (int i=0;i<threads;i++){
-			computingUnits[i].finish=false;
-			threadPool.execute(computingUnits[i]);
-		}
-		
-		for (int i=0;i<threads;i++){
-			while(!computingUnits[i].finish){
-				Thread.yield();
+		if (singleThread){
+			for (int i=0;i<width;i++){
+				System.arraycopy(lifes[i], 0, bufferLifes[i], 0, height);
+				for (int l=0;l<height;l++){
+					int nearby=getAroundLifes(i,l);
+					
+					if ((nearby<2||nearby>3)&&lifes[i][l]){
+						bufferLifes[i][l]=false;
+						changed(i, l,false);
+					}else if(nearby==3&&!lifes[i][l]){
+						bufferLifes[i][l]=true;
+						changed(i,l,true);
+					}
+				}
+			}
+		}else{
+			for (int i=0;i<threads;i++){
+				computingUnits[i].finish=false;
+				threadPool.execute(computingUnits[i]);
+			}
+			
+			for (int i=0;i<threads;i++){
+				while(!computingUnits[i].finish){
+					Thread.yield();
+				}
 			}
 		}
 		
@@ -167,6 +190,11 @@ public class LifeGameEngine {
 	}
 	
 	public void shutdown(){
-		threadPool.shutdown();
+		if (!singleThread){
+			threadPool.shutdown();
+			threadPool=null;
+			computingUnits=null;
+			bufferLifes=null;
+		}
 	}
 }

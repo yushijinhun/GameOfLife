@@ -9,6 +9,10 @@ public final class LifeGameEngineConfiguration {
 	public final int height;
 	
 	public LifeGameEngineConfiguration(int width,int height,int threads) {
+		if (threads<1||width<1||height<1){
+			throw new IllegalArgumentException();
+		}
+		
 		this.threads = threads;
 		this.width = width;
 		this.height = height;
