@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import com.github.yushijinhun.gameoflife.Main;
 import com.github.yushijinhun.gameoflife.core.LifeGameCellHandler;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
 import com.github.yushijinhun.gameoflife.util.ExceptionUtil;
@@ -406,8 +407,8 @@ public class LifeGameGui extends Canvas{
 		
 		if (fistOpen){
 			g2d.setFont(fontBig);
-			renderString(g2d,"Game of Life v0.2", 80, 80);
-			renderString(g2d,"by yushijinhun", 80, 95);
+			renderString(g2d,Main.name+" "+Main.version, 80, 80);
+			renderString(g2d,"by "+Main.by, 80, 95);
 			renderString(g2d,"Press N to show next frame", 80, 120);
 			renderString(g2d,"Press Z to enlarge", 80, 135);
 			renderString(g2d,"Press X to shrink", 80, 150);

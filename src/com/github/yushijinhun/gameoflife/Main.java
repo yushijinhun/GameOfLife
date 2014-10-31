@@ -14,6 +14,11 @@ import com.github.yushijinhun.nbt4j.io.TagInputStream;
 
 public final class Main {
 	
+	public static final String name="Game Of Life";
+	public static final String version="v0.3-pre1";
+	public static final String github="https://www.github.com/yushijinhun/GameOfLife";
+	public static final String by="yushijinhun";
+	
 	public static LifeGameThreadGroup threadGroup;
 	
 	private static int width=160;
