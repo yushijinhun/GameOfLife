@@ -56,12 +56,10 @@ public class LifeGameEngine {
 	
 	public final int width;
 	public final int height;
-	public final LifeGameChangedCellsQueue trueQueue;
-	public final LifeGameChangedCellsQueue falseQueue;
 	
 	private final int threads;
 	private final boolean singleThread;
-	private int cellsCount;
+	private LifeGameCellHandler cellHandler;
 	private long ticks=0;
 	private boolean[][] lifes;
 	private boolean[][] bufferLifes;
@@ -71,14 +69,11 @@ public class LifeGameEngine {
 	public LifeGameEngine(LifeGameEngineConfiguration config) {
 		this.width=config.width;
 		this.height=config.height;
-		cellsCount=width*height;
 		threads=config.threads;
 		singleThread=threads==1;
 		if (!singleThread){
 			threadPool=Executors.newFixedThreadPool(threads);
 		}
-		trueQueue=new LifeGameChangedCellsQueue(cellsCount);
-		falseQueue=new LifeGameChangedCellsQueue(cellsCount);
 		
 		lifes=new boolean[width][];
 		for (int i=0;i<width;i++){
@@ -116,7 +111,9 @@ public class LifeGameEngine {
 	}
 	
 	private void changed(int x, int y,boolean to) {
-		(to?trueQueue:falseQueue).add(x, y);
+		if (cellHandler!=null){
+			cellHandler.onChanged(this, x, y, to);
+		}
 	}
 	
 	public void nextFrame(){
@@ -195,6 +192,23 @@ public class LifeGameEngine {
 			threadPool=null;
 			computingUnits=null;
 			bufferLifes=null;
+			cellHandler=null;
+		}
+	}
+
+	public LifeGameCellHandler getCellHandler() {
+		return cellHandler;
+	}
+
+	public void setCellHandler(LifeGameCellHandler cellHandler) {
+		this.cellHandler = cellHandler;
+	}
+	
+	public void resendAllChangeEvent(){
+		for (int x=0;x<width;x++){
+			for (int y=0;y<height;y++){
+				changed(x, y, lifes[x][y]);
+			}
 		}
 	}
 }
