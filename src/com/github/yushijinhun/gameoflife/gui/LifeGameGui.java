@@ -14,6 +14,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.SampleModel;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,7 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import com.github.yushijinhun.gameoflife.core.LifeGameChangedCellsQueue;
+import com.github.yushijinhun.gameoflife.core.LifeGameCellHandler;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
 import com.github.yushijinhun.gameoflife.util.ExceptionUtil;
 import com.github.yushijinhun.nbt4j.io.TagOutputStream;
@@ -36,6 +39,8 @@ public class LifeGameGui extends Canvas{
 	private static final long serialVersionUID = 1L;
 	private static final Font font=new Font("Dialog",Font.BOLD,12);
 	private static final Font fontBig=new Font("Dialog",Font.BOLD,16);
+	private static final int deadColor=Color.DARK_GRAY.getRGB();
+	private static final int livingColor=Color.GREEN.getRGB();
 	
 	public final LifeGameEngine engine;
 	public int fps=0;
@@ -46,7 +51,6 @@ public class LifeGameGui extends Canvas{
 	private double scale;
 	private BufferedImage buffer;
 	private BufferedImage cellsBuffer;
-	private Graphics2D cellsBufferGraphics;
 	private boolean fistOpen=true;
 	private boolean stopped=false;
 	private int xOffset=0;
@@ -82,113 +86,89 @@ public class LifeGameGui extends Canvas{
 	
 	private final Thread renderThread=new Thread("Render Thread"){
 		
-		class CellsRender implements Runnable{
-			
-			public boolean rendering=false;
-			
-			public void run() {
-				synchronized (engine) {
-					if (drawFull){
-						cellsBufferGraphics.setColor(Color.DARK_GRAY);
-						cellsBufferGraphics.fillRect(0, 0, cellsBuffer.getWidth(), cellsBuffer.getHeight());
-						cellsBufferGraphics.setColor(Color.GREEN);
-						for (int x=0;x<engine.width;x++){
-							for (int y=0;y<engine.height;y++){
-								if (engine.get(x, y)){
-									cellsBufferGraphics.fillRect(x, y, 1, 1);
-								}
-							}
+		public void run(){
+			while(buffer==null){
+				if (getGraphicsConfiguration()!=null){
+					Dimension d=Toolkit.getDefaultToolkit().getScreenSize();
+					buffer=getGraphicsConfiguration().createCompatibleImage((int)d.getWidth(), (int)d.getHeight());
+					cellsBuffer=getGraphicsConfiguration().createCompatibleImage(engine.width, engine.height);
+					
+					engine.setCellHandler(new LifeGameCellHandler() {
+						
+						private final Object deadData;
+						private final Object livingData;
+						private final SampleModel sampleModel;
+						private final DataBuffer dataBuffer;
+						
+						{
+							ColorModel colorModel=cellsBuffer.getColorModel();
+							deadData=colorModel.getDataElements(deadColor, null);
+							livingData=colorModel.getDataElements(livingColor, null);
+							sampleModel=cellsBuffer.getRaster().getSampleModel();
+							dataBuffer=cellsBuffer.getRaster().getDataBuffer();
 						}
 						
-						drawFull=false;
-					}else{
-						cellsBufferGraphics.setColor(Color.GREEN);
-						renderChangedCellsQueue(engine.trueQueue);
-						cellsBufferGraphics.setColor(Color.DARK_GRAY);
-						renderChangedCellsQueue(engine.falseQueue);
-					}
+						@Override
+						public void onChanged(LifeGameEngine engine, int x, int y, boolean to) {
+							sampleModel.setDataElements(x, y, to?livingData:deadData,dataBuffer);
+						}
+					});
+					
+					new Thread("Repaint Thread"){
+						public void run(){
+							engine.resendAllChangeEvent();
+						}
+					}.start();
+					break;
 				}
-				rendering=false;
+				
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+					return;
+				}
 			}
 			
-			private void renderChangedCellsQueue(LifeGameChangedCellsQueue q){
-				synchronized (q) {
-					for (int i=0;i<q.size();i++){
-						cellsBufferGraphics.fillRect(q.getXAtIndex(i), q.getYAtIndex(i), 1, 1);
-					}
-					q.clear();
+			Graphics2D g2d=buffer.createGraphics();
+			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+			g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+			
+			int fps=0;
+			long nextSecond=System.currentTimeMillis();
+			long lastRenderTimeBegin=0;
+			long lastRenderTime=0;
+			long sleepTime;
+			
+			while(!stopped){
+				if (nextSecond<=System.currentTimeMillis()){
+					nextSecond=System.currentTimeMillis()+1000;
+					LifeGameGui.this.fps=fps;
+					fps=0;
 				}
-			}
-		};
-		
-		private final ExecutorService renderThreadPool=Executors.newSingleThreadExecutor();
-		private final CellsRender cellsRender=new CellsRender();
-		
-		public void run(){
-			try{
-				while(buffer==null){
-					if (getGraphicsConfiguration()!=null){
-						Dimension d=Toolkit.getDefaultToolkit().getScreenSize();
-						buffer=getGraphicsConfiguration().createCompatibleImage((int)d.getWidth(), (int)d.getHeight());
-						cellsBuffer=getGraphicsConfiguration().createCompatibleImage(engine.width, engine.height);
-						cellsBufferGraphics=cellsBuffer.createGraphics();
-						break;
-					}
-					
+				
+				lastRenderTimeBegin=System.currentTimeMillis();
+				
+				synchronized (buffer) {
+					g2d.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
+					render(g2d);
+				}
+				repaint();
+				lastRenderTime=System.currentTimeMillis()-lastRenderTimeBegin;
+				
+				fps++;
+				
+				sleepTime=1000/200-lastRenderTime;
+				if (sleepTime>0){
 					try {
-						Thread.sleep(1);
+						Thread.sleep(sleepTime);
 					} catch (InterruptedException e) {
 						return;
 					}
 				}
-				
-				Graphics2D g2d=buffer.createGraphics();
-				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-				g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-				g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-				
-				int fps=0;
-				long nextSecond=System.currentTimeMillis();
-				long lastRenderTimeBegin=0;
-				long lastRenderTime=0;
-				long sleepTime;
-				
-				while(!stopped){
-					if (nextSecond<=System.currentTimeMillis()){
-						nextSecond=System.currentTimeMillis()+1000;
-						LifeGameGui.this.fps=fps;
-						fps=0;
-					}
-					
-					lastRenderTimeBegin=System.currentTimeMillis();
-					if (!cellsRender.rendering){
-						cellsRender.rendering=true;
-						renderThreadPool.execute(cellsRender);
-					}
-					
-					synchronized (buffer) {
-						g2d.clearRect(0, 0, buffer.getWidth(), buffer.getHeight());
-						render(g2d);
-					}
-					repaint();
-					lastRenderTime=System.currentTimeMillis()-lastRenderTimeBegin;
-					
-					fps++;
-					
-					sleepTime=1000/200-lastRenderTime;
-					if (sleepTime>0){
-						try {
-							Thread.sleep(sleepTime);
-						} catch (InterruptedException e) {
-							return;
-						}
-					}
-				}
-			}finally{
-				renderThreadPool.shutdown();
 			}
+			
 		}
-		
 	};
 	
 	private class SavingThread implements Runnable {
