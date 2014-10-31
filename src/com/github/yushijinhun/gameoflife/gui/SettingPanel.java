@@ -23,6 +23,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import com.github.yushijinhun.gameoflife.Main;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngine;
 import com.github.yushijinhun.gameoflife.core.LifeGameEngineConfiguration;
 import com.github.yushijinhun.gameoflife.gui.event.DataProcessEvent;
@@ -344,6 +345,7 @@ public class SettingPanel extends DataInputPanel {
 		
 		if (engine!=null){
 			LifeGameWindow window=new LifeGameWindow(scale, engine);
+			Main.threadGroup.setWindow(window);
 			poseDataProcessEvent(new DataProcessEvent(this, window));
 			window.setVisible(true);
 		}

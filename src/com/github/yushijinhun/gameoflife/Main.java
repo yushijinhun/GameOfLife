@@ -9,35 +9,24 @@ import com.github.yushijinhun.gameoflife.core.LifeGameEngineConfiguration;
 import com.github.yushijinhun.gameoflife.gui.LifeGameWindow;
 import com.github.yushijinhun.gameoflife.gui.SettingWindow;
 import com.github.yushijinhun.gameoflife.util.ExceptionUtil;
+import com.github.yushijinhun.gameoflife.util.LifeGameThreadGroup;
 import com.github.yushijinhun.nbt4j.io.TagInputStream;
 
 public final class Main {
+	
+	public static LifeGameThreadGroup threadGroup;
 	
 	private static int width=160;
 	private static int height=120;
 	private static boolean random;
 	private static double scale=4;
-	private static LifeGameWindow window;
 	private static String filePath=null;
 	private static int threads=LifeGameEngineConfiguration.DEFAULT_THREADS;
 	
 	public static void main(final String[] args) {
-		new Thread(new ThreadGroup("lifegame"){
-			
-			public void uncaughtException(Thread t, Throwable e){
-				super.uncaughtException(t, e);
-				
-				if (window!=null){
-					window.gui.shutdown();
-					window=null;
-					System.gc();
-				}
-				
-				interrupt();
-				ExceptionUtil.showExceptionDialog(e, t, "Game Of Life has crashed!\n");
-			}
-			
-		}, new Runnable() {
+		threadGroup=new LifeGameThreadGroup("lifegame");
+		
+		new Thread(threadGroup,new Runnable() {
 			
 			@Override
 			public void run() {
@@ -52,7 +41,8 @@ public final class Main {
 	
 	private static void startFromCommandline(String[] args) {
 		readArgs(args);
-		window=new LifeGameWindow(scale,createEngine());
+		LifeGameWindow window=new LifeGameWindow(scale,createEngine());
+		threadGroup.setWindow(window);
 		
 		if (random){
 			LifeGameEngine engine=window.gui.engine;
