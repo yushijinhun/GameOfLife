@@ -42,6 +42,28 @@ public class LifeGameGui extends Canvas{
 	private static final int deadColor=Color.DARK_GRAY.getRGB();
 	private static final int livingColor=Color.GREEN.getRGB();
 	
+	private class SetTask implements Runnable{
+
+		private final int x;
+		private final int y;
+		private final boolean set;
+
+		public SetTask(int x, int y,boolean set) {
+			super();
+			this.x = x;
+			this.y = y;
+			this.set=set;
+		}
+
+		@Override
+		public void run() {			
+			synchronized (engine) {
+				engine.set(x, y, set);
+			}
+		}
+		
+	}
+	
 	public final LifeGameEngine engine;
 	public int fps=0;
 	public long lastTickingTime=0;
@@ -64,6 +86,8 @@ public class LifeGameGui extends Canvas{
 	private final ExecutorService threadPool;
 	private boolean isComputing=false;
 	private boolean isSaving=false;
+	private boolean pressSet;
+	private boolean isPressing=false;
 	private final SavingThread savingThread=new SavingThread();
 	private final JFileChooser chooser = new JFileChooser();
 	
@@ -228,26 +252,23 @@ public class LifeGameGui extends Canvas{
 				
 				switch(e.getButton()){
 					case MouseEvent.BUTTON1:
-						final int x=(int) (Math.rint(e.getX()-xOffset)/scale);
-						final int y=(int) (Math.rint(e.getY()-yOffset)/scale);
-						
-						if (x>=engine.width||y>=engine.height||x<0||y<0){
-							return;
-						}
-						
-						threadPool.execute(new Runnable() {
+						if (!isPressing){
+							isPressing=true;
+							int x=(int) (Math.rint(e.getX()-xOffset)/scale);
+							int y=(int) (Math.rint(e.getY()-yOffset)/scale);
+							pressSet=!engine.get(x, y);
 							
-							public void run() {
-								synchronized (engine) {
-									engine.set(x, y, !engine.get(x, y));
-								}
+							if (x>=engine.width||y>=engine.height||x<0||y<0){
+								return;
 							}
-						});
+							
+							threadPool.execute(new SetTask(x, y,pressSet));
+						}
 						
 						break;
 						
 					case MouseEvent.BUTTON3:
-						if (isDragging==false){
+						if (!isDragging){
 							isDragging=true;
 							dragBeginX=e.getX()-xOffset;
 							dragBeginY=e.getY()-yOffset;
@@ -258,11 +279,11 @@ public class LifeGameGui extends Canvas{
 			}
 			
 			public void mouseReleased(MouseEvent e) {
-				if (e.getButton()!=MouseEvent.BUTTON3){
-					return;
+				if (e.getButton()==MouseEvent.BUTTON3){
+					isDragging=false;
+				}else if (e.getButton()==MouseEvent.BUTTON1){
+					isPressing=false;
 				}
-				
-				isDragging=false;
 			}
 		});
 		
@@ -276,12 +297,21 @@ public class LifeGameGui extends Canvas{
 			public void mouseDragged(MouseEvent e) {
 				updateMousePos();
 				
-				if (!isDragging){
-					return;
+				if (isDragging){
+					xOffset=e.getX()-dragBeginX;
+					yOffset=e.getY()-dragBeginY;
 				}
 				
-				xOffset=e.getX()-dragBeginX;
-				yOffset=e.getY()-dragBeginY;
+				if (isPressing){
+					final int x=(int) (Math.rint(e.getX()-xOffset)/scale);
+					final int y=(int) (Math.rint(e.getY()-yOffset)/scale);
+					
+					if (x>=engine.width||y>=engine.height||x<0||y<0){
+						return;
+					}
+					
+					threadPool.execute(new SetTask(x, y,pressSet));
+				}
 			}
 		});
 		
