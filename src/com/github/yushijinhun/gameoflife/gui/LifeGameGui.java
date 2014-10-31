@@ -46,7 +46,6 @@ public class LifeGameGui extends Canvas{
 	public int fps=0;
 	public long lastTickingTime=0;
 	public boolean showInfo=true;
-	public boolean drawFull;
 	
 	private double scale;
 	private BufferedImage buffer;
@@ -211,7 +210,6 @@ public class LifeGameGui extends Canvas{
 	
 	public LifeGameGui(double blockSize,LifeGameEngine theEngine) {
 		scale=blockSize;
-		drawFull=true;
 		threadPool=Executors.newSingleThreadExecutor();
 		engine=theEngine;
 		

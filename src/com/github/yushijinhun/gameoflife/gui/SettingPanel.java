@@ -215,7 +215,7 @@ public class SettingPanel extends DataInputPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				chooser.showSaveDialog(SettingPanel.this);
+				chooser.showOpenDialog(SettingPanel.this);
 				
 				File file=chooser.getSelectedFile();
 				
