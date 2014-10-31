@@ -367,6 +367,8 @@ public class LifeGameGui extends Canvas{
 		
 		if (showInfo){
 			g2d.setFont(font);
+			renderString(g2d,"computing threads: "+engine.getThreads(), 0, 60);
+			renderString(g2d,"memory: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())/1024/1024+"m used", 0, 50);
 			renderString(g2d,"cell size: "+scale, 0, 40);
 			renderString(g2d,"last ticking time: "+(isComputing?"computing...":lastTickingTime), 0, 30);
 			renderString(g2d,"ticks: "+engine.getTicks(), 0, 20);
@@ -384,7 +386,9 @@ public class LifeGameGui extends Canvas{
 			renderString(g2d,"Press F1 to show/hide information", 80, 165);
 			renderString(g2d,"Press Ctrl+S to save the game", 80, 180);
 			renderString(g2d,"Press Ctrl+0 to set scale to 1", 80, 195);
-			renderString(g2d,"Click to change one cell's status", 80, 210);
+			renderString(g2d,"Press Ctrl+G to show goto window", 80, 210);
+			renderString(g2d,"Press Ctrl+D to show scale window", 80, 225);
+			renderString(g2d,"Click to change one cell's status", 80, 240);
 		}
 		
 	}

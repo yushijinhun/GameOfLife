@@ -211,4 +211,9 @@ public class LifeGameEngine {
 			}
 		}
 	}
+
+	
+	public int getThreads() {
+		return threads;
+	}
 }
