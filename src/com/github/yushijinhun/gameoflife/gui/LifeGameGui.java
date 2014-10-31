@@ -32,7 +32,7 @@ import com.github.yushijinhun.nbt4j.tags.NbtTagCompound;
 
 public class LifeGameGui extends Canvas{
 	
-	public static final double SCALE_FACTOR = 0.75;
+	public static final double SCALE_FACTOR = 15d/16d;
 	
 	public static final double MAX_SCALE=256d;
 	
