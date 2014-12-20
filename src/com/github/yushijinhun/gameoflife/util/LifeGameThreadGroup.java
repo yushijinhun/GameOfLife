@@ -5,29 +5,29 @@ import com.github.yushijinhun.gameoflife.gui.LifeGameWindow;
 public class LifeGameThreadGroup extends ThreadGroup {
 
 	private LifeGameWindow window;
-	
+
 	public LifeGameThreadGroup(String name) {
 		super(name);
 	}
-	
+
 	public LifeGameThreadGroup(ThreadGroup parent, String name) {
 		super(parent, name);
 	}
 
-	public void uncaughtException(Thread t, Throwable e){
+	@Override
+	public void uncaughtException(Thread t, Throwable e) {
 		super.uncaughtException(t, e);
-		
-		if (window!=null){
+
+		if (window != null) {
 			window.gui.shutdown();
-			window=null;
+			window = null;
 			System.gc();
 		}
-		
+
 		interrupt();
 		ExceptionUtil.showExceptionDialog(e, t, "Game Of Life has crashed!\n");
 	}
 
-	
 	public LifeGameWindow getWindow() {
 		return window;
 	}
@@ -35,5 +35,5 @@ public class LifeGameThreadGroup extends ThreadGroup {
 	public void setWindow(LifeGameWindow window) {
 		this.window = window;
 	}
-	
+
 }
