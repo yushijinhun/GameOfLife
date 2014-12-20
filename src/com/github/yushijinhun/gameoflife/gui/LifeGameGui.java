@@ -257,12 +257,12 @@ public class LifeGameGui extends Canvas{
 							isPressing=true;
 							int x=(int) (Math.rint(e.getX()-xOffset)/scale);
 							int y=(int) (Math.rint(e.getY()-yOffset)/scale);
-							pressSet=!engine.get(x, y);
 							
 							if (x>=engine.width||y>=engine.height||x<0||y<0){
 								return;
 							}
 							
+							pressSet=!engine.get(x, y);
 							threadPool.execute(new SetTask(x, y,pressSet));
 						}
 						
