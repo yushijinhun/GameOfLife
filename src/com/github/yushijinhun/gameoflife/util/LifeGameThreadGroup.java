@@ -26,6 +26,7 @@ public class LifeGameThreadGroup extends ThreadGroup {
 
 		interrupt();
 		ExceptionUtil.showExceptionDialog(e, t, "Game Of Life has crashed!\n");
+		System.exit(1);
 	}
 
 	public LifeGameWindow getWindow() {
