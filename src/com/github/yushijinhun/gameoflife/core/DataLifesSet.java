@@ -2,9 +2,10 @@ package com.github.yushijinhun.gameoflife.core;
 
 import java.math.BigInteger;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
-public class DataLifesSet implements LifeGameData {
+public class DataLifesSet implements LifeGameDataCountable {
 	
 	protected Set<Point> lifes;
 	
@@ -24,6 +25,11 @@ public class DataLifesSet implements LifeGameData {
 		}else{
 			lifes.remove(new Point(x,y));
 		}
+	}
+
+	@Override
+	public Iterator<Point> getLifes() {
+		return lifes.iterator();
 	}
 
 }
