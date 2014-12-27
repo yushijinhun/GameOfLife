@@ -47,17 +47,23 @@ public class SimulatorCountable implements LifeGameSimulator {
 			
 			if (near<2){
 				if (isLiving){
-					changingHandler.onChanging(point.x, point.y, true, false);
+					if (changingHandler!=null){
+						changingHandler.onChanging(point.x, point.y, true, false);
+					}
 					newData.setCellLiving(point.x, point.y, false);
 				}
 			}else if (near==3){
 				if (!isLiving){
-					changingHandler.onChanging(point.x, point.y, false, true);
+					if (changingHandler!=null){
+						changingHandler.onChanging(point.x, point.y, false, true);
+					}
 					newData.setCellLiving(point.x, point.y, true);
 				}
 			}else if (near>3){
 				if (isLiving){
-					changingHandler.onChanging(point.x, point.y, true, false);
+					if (changingHandler!=null){
+						changingHandler.onChanging(point.x, point.y, true, false);
+					}
 					newData.setCellLiving(point.x, point.y, false);
 				}
 			}
