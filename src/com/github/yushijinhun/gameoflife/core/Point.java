@@ -2,7 +2,7 @@ package com.github.yushijinhun.gameoflife.core;
 
 import java.math.BigInteger;
 
-public class Point {
+public class Point implements Cloneable {
 
 	public BigInteger x;
 	public BigInteger y;
@@ -32,5 +32,10 @@ public class Point {
 		}
 		
 		return false;
+	}
+	
+	@Override
+	public Point clone(){
+		return new Point(x,y);
 	}
 }

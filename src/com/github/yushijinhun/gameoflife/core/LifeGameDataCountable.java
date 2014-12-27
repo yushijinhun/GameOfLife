@@ -6,4 +6,6 @@ public interface LifeGameDataCountable extends LifeGameData {
 
 	Iterator<Point> getLifes();
 
+	@Override
+	LifeGameDataCountable clone();
 }

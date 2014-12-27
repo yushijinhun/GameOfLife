@@ -32,4 +32,13 @@ public class DataLifesSet implements LifeGameDataCountable {
 		return lifes.iterator();
 	}
 
+	@Override
+	public DataLifesSet clone(){
+		DataLifesSet newOne=new DataLifesSet();
+		Iterator<Point> cells=getLifes();
+		while (cells.hasNext()) {
+			newOne.lifes.add(cells.next().clone());
+		}
+		return newOne;
+	}
 }
